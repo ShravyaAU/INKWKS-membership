@@ -1,0 +1,1068 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>INK WKS Membership | Studio Access Portal</title>
+    <style>
+        :root {
+            --asu-gold: #FFC627;
+            --bg-dark: #FFFFFF;
+            --card-bg: #1E1E24;
+            --text-light: #F9F8F6;
+            --text-muted: #A0A0A0;
+            --border-color: #333;
+        }
+        body {
+            background-color: var(--bg-dark);
+            color: var(--text-light);
+            font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+            margin: 0; padding: 0;
+        }
+        .navbar {
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 15px 40px; background-color: var(--bg-dark); border-bottom: 1px solid var(--border-color);
+        }
+        .nav-brand { font-weight: bold; font-size: 18px; letter-spacing: 1px; }
+        .nav-controls { display: flex; align-items: center; gap: 20px; }
+        .role-badge { 
+            border: 1px solid var(--asu-gold); color: var(--asu-gold); 
+            padding: 5px 15px; border-radius: 20px; font-size: 12px; text-transform: uppercase;
+        }
+        .switch-role-btn {
+            background-color: var(--asu-gold); color: var(--bg-dark);
+            border: none; padding: 8px 16px; border-radius: 4px; font-weight: bold; cursor: pointer;
+        }
+        .user-profile { text-align: right; line-height: 1.2; }
+        .user-name { font-weight: bold; }
+        .user-email { font-size: 12px; color: var(--asu-gold); }
+        .container { padding: 40px; max-width: 1400px; margin: 0 auto; }
+        .page-header { margin-bottom: 30px; }
+        .page-header h1 { margin: 0 0 5px 0; font-size: 32px; }
+        .page-header p { color: var(--text-muted); margin: 0; font-size: 14px; }
+        .dashboard-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 20px; }
+        .card { background-color: var(--card-bg); padding: 25px; border-radius: 12px; border: 1px solid var(--border-color); }
+        .card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; text-transform: uppercase; font-size: 12px; font-weight: bold; color: var(--text-muted); }
+        .status-badge { padding: 4px 10px; border-radius: 4px; font-weight: bold; }
+        .status-none { background-color: rgba(255,107,107,0.1); color: #ff6b6b; border: 1px solid #ff6b6b; }
+        input, select, textarea {
+            width: 100%; padding: 12px; margin-bottom: 15px;
+            background-color: rgba(0,0,0,0.2); color: white;
+            border: 1px solid var(--border-color); border-radius: 6px; box-sizing: border-box;
+        }
+        .view-section { display: none; }
+        .active-view { display: block; }
+    </style>
+</head>
+<body>
+
+    <!-- NAV BAR -->
+    <nav class="navbar">
+        <div class="nav-brand">
+            <span style="color: var(--asu-gold);">🖨️ INKWRKS Membership</span><br>
+            <span style="font-size: 12px; color: var(--text-muted); font-weight: normal;">Basement Press Co. • Studio Access Portal</span>
+        </div>
+        <div class="nav-controls">
+            <div class="role-badge" id="current-view-badge">LOADING...</div>
+            <button id="nav-switch-role-btn" class="switch-role-btn" onclick="openRoleModal()">Switch Role</button>
+            <div class="user-profile">
+                <div class="user-name" id="display-name">Loading...</div>
+                <div class="user-email" id="display-email">@asu.edu</div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- ROLE MODAL GATEWAY -->
+    <div id="roleGatewayModal" style="display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.8); align-items: center; justify-content: center;">
+        <div style="background-color: #1A1A24; padding: 40px; border-radius: 12px; width: 100%; max-width: 600px; border: 1px solid #333; position: relative;">
+            <div style="text-align: center; margin-bottom: 30px;">
+                <span style="background-color: rgba(255, 107, 107, 0.2); color: #ff6b6b; padding: 5px 15px; border-radius: 20px; font-size: 12px; font-weight: bold; border: 1px solid #ff6b6b;">🖨️ INK WKS Membership</span>
+                <h2 style="margin-top: 15px; font-size: 28px; color: white;">Welcome to Basement Press Co.</h2>
+            </div>
+            
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+                <button onclick="enforceView('student')" style="background-color: #1E1E1E; border: 1px solid #FFC627; color: white; padding: 20px; border-radius: 12px; display: flex; align-items: center; justify-content: space-between; cursor: pointer;">
+                    <div style="display: flex; align-items: center; gap: 10px;">
+                        <span style="background-color: rgba(255,198,39,0.2); padding: 10px; border-radius: 8px;">👤</span>
+                        <span style="font-weight: bold; font-size: 16px;">Student Pass</span>
+                    </div>
+                    <span style="color: #FFC627;">→</span>
+                </button>
+                <button onclick="enforceView('faculty')" style="background-color: #1E1E1E; border: 1px solid #8B5CF6; color: white; padding: 20px; border-radius: 12px; display: flex; align-items: center; justify-content: space-between; cursor: pointer;">
+                    <div style="display: flex; align-items: center; gap: 10px;">
+                        <span style="background-color: rgba(139,92,246,0.2); padding: 10px; border-radius: 8px;">🎓</span>
+                        <span style="font-weight: bold; font-size: 16px;">Faculty / Staff</span>
+                    </div>
+                    <span style="color: #8B5CF6;">→</span>
+                </button>
+                <button onclick="enforceView('club')" style="background-color: #1E1E1E; border: 1px solid #10B981; color: white; padding: 20px; border-radius: 12px; display: flex; align-items: center; justify-content: space-between; cursor: pointer;">
+                    <div style="display: flex; align-items: center; gap: 10px;">
+                        <span style="background-color: rgba(16,185,129,0.2); padding: 10px; border-radius: 8px;">👥</span>
+                        <span style="font-weight: bold; font-size: 16px;">Student Club</span>
+                    </div>
+                    <span style="color: #10B981;">→</span>
+                </button>
+                <button onclick="enforceView('admin')" style="background-color: #1E1E1E; border: 1px solid #EF4444; color: white; padding: 20px; border-radius: 12px; display: flex; align-items: center; justify-content: space-between; cursor: pointer;">
+                    <div style="display: flex; align-items: center; gap: 10px;">
+                        <span style="background-color: rgba(239,68,68,0.2); padding: 10px; border-radius: 8px;">🔑</span>
+                        <span style="font-weight: bold; font-size: 16px;">Admin Portal</span>
+                    </div>
+                    <span style="color: #EF4444;">→</span>
+                </button>
+            </div>
+            <button onclick="closeRoleModal()" style="position: absolute; top: 15px; right: 20px; background: none; border: none; color: #888; font-size: 20px; cursor: pointer;">×</button>
+        </div>
+    </div>
+
+    <!-- BOOKING EXPECTATIONS MODAL -->
+    <div id="bookingModal" style="display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.8); align-items: center; justify-content: center;">
+        <div style="background-color: var(--card-bg); padding: 30px; border-radius: 12px; width: 100%; max-width: 500px; border: 1px solid var(--border-color); position: relative;">
+            <h2 style="margin-top: 0; color: white;">Book a Studio Session</h2>
+            
+            <div style="background-color: #111; padding: 15px; border-radius: 8px; margin-bottom: 20px; font-size: 13px; color: var(--text-muted); line-height: 1.6; border: 1px solid #333;">
+                <strong style="color: var(--asu-gold);">Appointment Expectations & Rules:</strong><br><br>
+                • <strong>Arrival:</strong> Arrive on time. Sessions are strictly limited to your reserved time block.<br>
+                • <strong>Preparation:</strong> Arrive with approved printable items and artwork prepared to studio specifications.<br>
+                • <strong>Cancellation:</strong> Cancellations must be made prior to the posted deadline to avoid forfeiting your session.<br>
+                • <strong>Accessibility:</strong> For disability accommodations during your session, please contact the studio manager in advance.
+            </div>
+
+            <label style="color: white; font-size: 14px; font-weight: bold; margin-bottom: 10px; display: block;">Select Date & Time:</label>
+            <input type="datetime-local" id="appointment-time" style="background-color: #ffffff; color: #000000; border: 3px solid var(--asu-gold); border-radius: 8px; padding: 15px; font-size: 16px; width: 100%; box-sizing: border-box; cursor: pointer; margin-bottom: 20px;">
+            <p id="booking-error" style="color: #ff6b6b; font-size: 14px; margin-top: 0;"></p>
+            
+            <button onclick="confirmBooking()" class="switch-role-btn" style="width: 100%; padding: 12px;">Acknowledge & Confirm Reservation</button>
+            <button onclick="closeBookingModal()" style="position: absolute; top: 15px; right: 20px; background: none; border: none; color: #888; font-size: 20px; cursor: pointer;">×</button>
+        </div>
+    </div>
+
+    <!-- CORE STUDIO POLICY MODAL -->
+    <div id="policyModal" style="display: none; position: fixed; z-index: 1100; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.85); align-items: center; justify-content: center; padding: 20px;">
+        <div style="background-color: var(--bg-dark); padding: 40px; border-radius: 12px; width: 100%; max-width: 700px; max-height: 85vh; overflow-y: auto; border: 1px solid var(--border-color); position: relative;">
+            <h2 style="color: white; margin-top: 0; border-bottom: 2px solid var(--asu-gold); padding-bottom: 10px;">Basement Press Co. Studio Policy</h2>
+            
+            <div style="color: var(--text-light); font-size: 13px; line-height: 1.6; margin-top: 20px; max-height: 50vh; overflow-y: auto; padding-right: 15px;">
+                <h3 style="color: var(--asu-gold); font-size: 14px; margin-bottom: 5px;">Core Studio Rules</h3>
+                <ul style="padding-left: 20px; margin-top: 0;">
+                    <li>Closed-toe shoes are required. Long hair, loose clothing, and jewelry must be secured.</li>
+                    <li>Food and drinks are not allowed in production areas.</li>
+                    <li>Users may operate equipment only after completing the required orientation.</li>
+                    <li>Sessions are supervised and limited to the reserved time.</li>
+                    <li>Users must arrive with approved printable items and artwork prepared to studio specifications.</li>
+                    <li>Users must clean screens, tools, presses, sinks, and work surfaces as directed.</li>
+                    <li>Ink and chemicals must be handled and disposed of according to studio instructions.</li>
+                    <li>Equipment problems, spills, injuries, and damage must be reported immediately.</li>
+                    <li>Tools or equipment may leave the studio only through formal checkout.</li>
+                    <li>Damage caused by misuse may result in repair or replacement charges.</li>
+                    <li>Unsafe conduct, theft, harassment, or intentional misuse may result in loss of access.</li>
+                    <li>Commercial production and high-volume projects require advance approval and separate pricing.</li>
+                    <li>Artwork must comply with ASU policies and applicable copyright and trademark requirements.</li>
+                    <li>Screen storage is temporary. Unclaimed screens may be reclaimed after the posted deadline.</li>
+                </ul>
+
+                <h3 style="color: var(--asu-gold); font-size: 14px; margin-bottom: 5px; margin-top: 20px;">Cancellation Policy</h3>
+                <ul style="padding-left: 20px; margin-top: 0;">
+                    <li>Cancel or reschedule at least 24 hours before the appointment.</li>
+                    <li>First late cancellation: session may be restored as a one-time courtesy.</li>
+                    <li>Second late cancellation & No-shows: session is deducted.</li>
+                    <li>Studio cancellation or qualifying equipment failure: session is restored automatically.</li>
+                </ul>
+
+                <h3 style="color: var(--asu-gold); font-size: 14px; margin-bottom: 5px; margin-top: 20px;">Refunds & Access</h3>
+                <p style="margin-top: 0;">Passes are generally nonrefundable after the first session has been used. Unused passes may be reviewed for refund before expiration, subject to Square processing terms. Passes and individual sessions are nontransferable unless the director approves an exception. Participation is subject to studio capacity, equipment condition, staffing, and safety compliance. Generous Devils may pause access when conditions are unsafe or a user repeatedly violates policies.</p>
+            </div>
+
+            <button onclick="document.getElementById('policyModal').style.display='none'" class="switch-role-btn" style="width: 100%; margin-top: 20px;">I have read and understand the core rules</button>
+        </div>
+    </div>
+
+    <!-- GET HELP / ACCESSIBILITY MODAL -->
+    <div id="helpModal" style="display: none; position: fixed; z-index: 1100; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.85); align-items: center; justify-content: center; padding: 20px;">
+        <div style="background-color: var(--card-bg); padding: 30px; border-radius: 12px; width: 100%; max-width: 450px; border: 1px solid var(--border-color); position: relative;">
+            <h2 style="color: white; margin-top: 0;">Get Help & Accessibility</h2>
+            <p style="color: var(--text-muted); font-size: 14px; line-height: 1.6;">
+                We are committed to providing an inclusive studio environment. If you require reasonable accommodations for a disability, emergency attendance support, or general assistance, please contact the studio management directly.
+            </p>
+            <p style="color: var(--text-muted); font-size: 13px; margin-bottom: 25px;">
+                <em>Note: Your request will be handled privately by the studio director. You do not need to share sensitive details with student workers.</em>
+            </p>
+            
+            <a href="mailto:studio@generousdevils.asu.edu?subject=Studio%20Accommodation%20Request" class="switch-role-btn" style="display: block; text-align: center; text-decoration: none; width: 100%; box-sizing: border-box; padding: 12px;">Contact Studio Manager</a>
+            
+            <button onclick="document.getElementById('helpModal').style.display='none'" style="position: absolute; top: 15px; right: 20px; background: none; border: none; color: #888; font-size: 20px; cursor: pointer;">×</button>
+        </div>
+    </div>
+
+    <!-- MAIN CONTAINER -->
+    <div class="container">
+
+        <!-- Student Portal Navigation (Now Global for Students) -->
+        <div id="student-subnav" style="display: none; background-color: #1A1A24; padding: 12px 20px; border-radius: 8px; border: 1px solid var(--border-color); margin-bottom: 25px; gap: 20px; font-size: 13px; font-weight: bold; overflow-x: auto;">
+            <a href="#" onclick="enforceView('student')" style="color: var(--asu-gold); text-decoration: none;">Dashboard</a>
+            <span style="color: #555;">|</span>
+            <a href="#" onclick="bookSession()" style="color: var(--text-light); text-decoration: none;">Book a Session</a>
+            <span style="color: #555;">|</span>
+            <a href="#pass-status-badge" onclick="enforceView('student')" style="color: var(--text-light); text-decoration: none;">My Pass</a>
+            <span style="color: #555;">|</span>
+            <a href="#screen-list" onclick="enforceView('student')" style="color: var(--text-light); text-decoration: none;">My Screens</a>
+            <span style="color: #555;">|</span>
+            <a href="#" onclick="enforceView('workshop')" style="color: var(--text-light); text-decoration: none;">Workshops</a>
+            <span style="color: #555;">|</span>
+            <a href="#materials-store" onclick="enforceView('student')" style="color: var(--text-light); text-decoration: none;">Materials & Add-Ons</a>
+            <span style="color: #555;">|</span>
+            <a href="#" onclick="document.getElementById('policyModal').style.display='flex'" style="color: var(--text-light); text-decoration: none;">Rules & Safety</a>
+            <span style="color: #555;">|</span>
+            <a href="#" onclick="document.getElementById('helpModal').style.display='flex'" style="color: var(--text-light); text-decoration: none;">Get Help</a>
+        </div>
+
+        <!-- 1. STUDENT VIEW -->
+        <div id="student-view" class="view-section active-view">
+            <div class="page-header" style="max-width: 900px; border-bottom: 1px solid var(--border-color); padding-bottom: 20px; margin-bottom: 30px;">
+                <h1 style="color: var(--asu-gold); margin-bottom: 5px;">Student Print Pass</h1>
+                <h3 style="color: white; margin-top: 0; font-size: 20px;">Three sessions. One very ink-covered adventure.</h3>
+                <p style="color: var(--text-muted); font-size: 14px; line-height: 1.6;">The Generous Devils Print Pass gives ASU students three supervised visits to the Basement Press Co. screen-printing studio for $25. Learn the process, use professional equipment, and bring a project from screen preparation to final print—without buying an entire print shop yourself.</p>
+                <p style="color: var(--text-muted); font-size: 14px; line-height: 1.6;">Each session is up to three hours. Your pass includes shared screen-printing tools, standard cleanup supplies, black ink, orientation, and one standard screen preparation and exposure. Bring your own shirts, paper, bags, or other approved printable items.<br><br><em>Specialty inks, transparencies, additional screens, artwork corrections, and replacement materials may require an additional fee. Studio access is subject to staffing, capacity, equipment condition, and completion of required safety training.</em></p>
+            </div>
+
+            <div class="dashboard-grid">
+                <!-- Column 1: Pass Status & Disclaimers -->
+                <div class="card" style="grid-column: span 1;">
+                    <div class="card-header">
+                        <span>Active Print Pass</span>
+                        <span class="status-badge status-none" id="pass-status-badge">NO ACTIVE PASS</span>
+                    </div>
+                    
+                    <div style="margin-bottom: 15px;">
+                        <strong style="color: white; font-size: 14px;">Before you purchase</strong>
+                        <p style="color: var(--text-muted); font-size: 13px; line-height: 1.5; margin-top: 5px;">
+                            Review the full studio-use, cancellation, expiration, cleanup, and safety policies. Passes are assigned to the purchaser and may not be shared. Completing payment does not guarantee a specific appointment time; sessions must be booked based on studio availability.
+                        </p>
+                    </div>
+                    <!-- Before Purchase Rules & Checkbox -->
+                    <div style="background-color: rgba(255,198,39,0.1); border-left: 4px solid var(--asu-gold); padding: 12px; margin: 15px 0;">
+                        <label style="display: flex; gap: 10px; align-items: flex-start; cursor: pointer; font-size: 12px; line-height: 1.5; color: var(--text-light);">
+                            <input type="checkbox" id="purchase-terms" style="margin-top: 2px;">
+                            <span>I understand what is included, what I must bring, when my pass expires, and that purchases and reservations are subject to the cancellation, safety, and studio-use policies.</span>
+                        </label>
+                    </div>
+                    <button class="switch-role-btn" style="width: 100%; padding: 12px;" onclick="initiatePurchase()">Buy 3 Sessions for $50</button>
+                    
+                    <div style="background-color: rgba(255, 107, 107, 0.1); border-left: 4px solid #ff6b6b; padding: 10px; margin-top: 10px;">
+                        <strong style="color: #ff6b6b; font-size: 12px; text-transform: uppercase;">Important</strong>
+                        <p style="color: var(--text-muted); font-size: 12px; margin: 5px 0 0 0; line-height: 1.4;">The pass does not guarantee a perfect final product. Screen printing involves testing, registration, setup, and the possibility of misprints.</p>
+                    </div>
+                </div>
+
+                <!-- Column 2: Included Offerings & Specific Portal Copy -->
+                <div class="card" style="grid-column: span 1;">
+                    <div class="card-header"><span>Included in Pass</span></div>
+                    <ul style="list-style: none; padding: 0; margin: 0; color: var(--text-muted); font-size: 13px; line-height: 1.6;">
+                        <li>• Three supervised studio sessions (up to 3 hrs each)</li>
+                        <li>• Shared tools, presses, and washout/drying equipment</li>
+                        <li>• Standard black ink and basic cleanup supplies</li>
+                        <li>• Reclaimed test paper when available</li>
+                        <li>• Guidance from a trained studio monitor</li>
+                        <li style="margin-top: 10px; color: var(--text-light);"><strong>⚠️ Equipment Orientation:</strong> Required on first visit.</li>
+                    </ul>
+                    
+                    <div style="background-color: #222; border-radius: 6px; padding: 10px; margin-top: 15px;">
+                        <p style="color: var(--asu-gold); font-size: 12px; margin: 0 0 5px 0; line-height: 1.4;">One standard screen preparation and exposure is included with each three-session pass. Additional screens, artwork corrections, transparencies, and screen re-exposure may require an additional fee.</p>
+                    </div>
+                </div>
+
+                <!-- Column 3: Complete What to Bring Checklist -->
+                <div class="card" style="grid-column: span 1;">
+                    <div class="card-header"><span>What to Bring</span></div>
+                    <ul style="list-style: none; padding: 0; margin: 0; color: var(--text-muted); font-size: 13px; line-height: 1.8;">
+                        <li>✅ Print-ready, one-color artwork</li>
+                        <li>✅ Approved shirts, paper, bags, or other printable items</li>
+                        <li>✅ A transparency or payment for transparency output</li>
+                        <li>✅ An apron or clothing that can get ink on it</li>
+                        <li>✅ Any specialty ink or project-specific material not included in the pass</li>
+                        <li style="margin-top: 10px;"><strong style="color: #ff6b6b;">⚠️ Closed-toe shoes are required for studio entry.</strong></li>
+                    </ul>
+                </div>
+            </div>
+            
+            <div class="dashboard-grid" style="margin-top: 20px;">
+                <div style="grid-column: span 2; display: flex; flex-direction: column; gap: 20px;">
+                    <div class="card">
+                        <div class="card-header"><span>Submit Artwork for Screen Exposure</span><span style="color: var(--asu-gold);">1 INCLUDED</span></div>
+                        <input type="text" id="screen-title" placeholder="e.g. Vintage Band Logo Screen">
+                        <label style="font-size: 12px; color: var(--text-muted);">MESH PREFERENCE</label>
+                        <select id="screen-mesh">
+                            <option value="156">156 Yellow Mesh (Standard Textile & Detail)</option>
+                            <option value="110">110 White Mesh (Heavy Ink & Underbases)</option>
+                            <option value="230">230 Yellow Mesh (Fine Halftones & Paper)</option>
+                        </select>
+                        <button class="switch-role-btn" style="background-color: transparent; color: var(--text-light); border: 1px solid #555; width: 100%;" onclick="submitScreen()">↑ Submit Artwork</button>
+                    </div>
+                    <div class="card">
+                        <div class="card-header"><span>My Screens Pipeline Status</span></div>
+                        <div id="screen-list" style="color: var(--text-muted); font-size: 14px;">No screens submitted yet.</div>
+                    </div>
+                    <!-- Unified Schedule: Appointments & Workshops -->
+                    <div class="card">
+                        <div class="card-header">
+                            <span>My Schedule & Registrations</span>
+                            <button onclick="bookSession()" style="background-color: var(--asu-gold); color: #121212; border: none; padding: 4px 10px; border-radius: 4px; font-weight: bold; font-size: 11px; cursor: pointer;">+ BOOK SESSION</button>
+                        </div>
+                        <div style="font-size: 11px; color: var(--asu-gold); margin-bottom: 8px; font-weight: bold; text-transform: uppercase;">Studio Sessions</div>
+                        <div id="appointment-list" style="color: var(--text-muted); font-size: 13px; margin-bottom: 15px;">
+                            No upcoming session appointments.
+                        </div>
+                        <div style="font-size: 11px; color: var(--asu-gold); margin-bottom: 8px; font-weight: bold; text-transform: uppercase; border-top: 1px dashed var(--border-color); padding-top: 15px;">Registered Workshops</div>
+                        <div id="dashboard-workshop-list" style="color: var(--text-muted); font-size: 13px;">
+                            No registered workshops.
+                        </div>
+                    </div>
+                </div>
+                <!-- Materials & Add-Ons Store -->
+                <div id="materials-store" class="card" style="grid-column: span 1; height: fit-content;">
+                    <div class="card-header">
+                        <span style="display: flex; align-items: center; gap: 5px;">📦 Materials & Add-Ons</span>
+                    </div>
+                    <p style="font-size: 11px; color: var(--asu-gold); margin: 0 0 15px 0; border-bottom: 1px solid var(--border-color); padding-bottom: 10px;">
+                        <em>All prices displayed include applicable taxes and Square processing fees.</em>
+                    </p>
+                    
+                    <div style="display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px solid var(--border-color);">
+                        <div><div style="font-weight: bold; font-size: 13px;">Extra Supervised Session</div></div>
+                        <button style="background-color: #333; color: white; border: none; padding: 5px 10px; border-radius: 4px; font-size: 12px; cursor: pointer;">$15</button>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px solid var(--border-color);">
+                        <div><div style="font-weight: bold; font-size: 13px;">Additional Screen Prep</div></div>
+                        <button style="background-color: #333; color: white; border: none; padding: 5px 10px; border-radius: 4px; font-size: 12px; cursor: pointer;">$15</button>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; align-items: center; padding: 10px 0;">
+                        <div><div style="font-weight: bold; font-size: 13px;">Transparency Output</div></div>
+                        <button style="background-color: #333; color: white; border: none; padding: 5px 10px; border-radius: 4px; font-size: 12px; cursor: pointer;">$5</button>
+                    </div>
+                </div>
+            </div>
+        </div> <!-- Closes student-view -->
+
+        <!-- 2. FACULTY VIEW -->
+        <div id="faculty-view" class="view-section">
+            <div class="page-header">
+                <h1>Faculty & Departmental Services</h1>
+                <p>Reserve Basement Press Co. for class workshops, departmental projects, or request estimates.</p>
+            </div>
+            <div class="dashboard-grid">
+                <div class="card" style="grid-column: span 2;">
+                    <div class="card-header"><span>Submit Workshop Request</span></div>
+                    <div style="display: flex; gap: 15px;">
+                        <input type="text" id="fac-dept" placeholder="Department (e.g. HIDA)" style="flex: 1;">
+                        <input type="text" id="fac-course" placeholder="Course (e.g. ART 310)" style="flex: 1;">
+                    </div>
+                    <select id="fac-category">
+                        <option value="Class Workshop">Class Workshop</option>
+                        <option value="Custom Production">Custom Production</option>
+                    </select>
+                    <div style="display: flex; gap: 15px;">
+                        <input type="date" id="fac-date" style="flex: 1;">
+                        <input type="number" id="fac-participants" placeholder="Est. Participants" style="flex: 1;">
+                    </div>
+                    <input type="text" id="fac-cost" placeholder="Cost-Center / Invoice ID">
+                    <textarea id="fac-specs" rows="3" placeholder="Project specifications..."></textarea>
+                    <button class="switch-role-btn" style="width: 100%;" onclick="submitFacultyRequest()">Submit Faculty Request</button>
+                </div>
+                <div class="card" style="grid-column: span 1; height: fit-content; margin-bottom: 20px;">
+                    <div class="card-header"><span>My Departmental Requests</span></div>
+                    <div id="faculty-request-list" style="color: var(--text-muted); font-size: 14px;">No requests submitted.</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 3. CLUB VIEW -->
+        <div id="club-view" class="view-section">
+            <div class="page-header">
+                <h1>Student Club Projects</h1>
+                <p>Register your recognized ASU organization for group print sessions.</p>
+            </div>
+            <div class="dashboard-grid">
+                <div class="card" style="grid-column: span 2;">
+                    <div class="card-header"><span>Group Project Request</span></div>
+                    <input type="text" id="club-name" placeholder="Registered Club Name">
+                    <div style="display: flex; gap: 15px;">
+                        <input type="date" id="club-date" style="flex: 1;">
+                        <input type="number" id="club-participants" placeholder="Expected Participants" style="flex: 1;">
+                    </div>
+                    <textarea id="club-items" rows="2" placeholder="Quantity & types of items"></textarea>
+                    <input type="url" id="club-artwork" placeholder="Artwork Link (Google Drive)">
+                    <div style="margin-top: 15px; margin-bottom: 20px; background-color: rgba(255,198,39,0.1); padding: 15px; border-radius: 8px; border-left: 4px solid var(--asu-gold);">
+                        <label style="display: flex; gap: 10px; align-items: flex-start; cursor: pointer; font-size: 14px;">
+                            <input type="checkbox" id="club-terms" style="width: auto; margin-top: 3px;">
+                            <span>I accept volunteer responsibilities and confirm ASU trademark compliance.</span>
+                        </label>
+                    </div>
+                    <button class="switch-role-btn" style="width: 100%;" onclick="submitClubRequest()">Submit Request</button>
+                </div>
+                <div class="card" style="grid-column: span 1; height: fit-content;">
+                    <div class="card-header"><span>Estimate Status</span></div>
+                    <div id="club-request-list" style="color: var(--text-muted); font-size: 14px;">No projects submitted.</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 4. WORKSHOP VIEW -->
+        <div id="workshop-view" class="view-section">
+            <div class="page-header" style="display: flex; justify-content: space-between; align-items: flex-start;">
+                <div>
+                    <h1>Studio Workshops & Classes</h1>
+                    <p>Register for scheduled learning experiences.</p>
+                </div>
+                <button onclick="enforceView('student')" class="switch-role-btn" style="background-color: transparent; border: 1px solid var(--asu-gold); color: var(--asu-gold);">← Back</button>
+            </div>
+            <div class="dashboard-grid">
+                <div class="card" style="grid-column: span 2;">
+                    <div class="card-header"><span>Upcoming Workshops</span></div>
+                    <div id="available-workshops-list"><p style="color: var(--text-muted); font-size: 14px;">Loading...</p></div>
+                </div>
+                <div class="card" style="grid-column: span 1; height: fit-content;">
+                    <div class="card-header"><span>My Registrations</span></div>
+                    <div id="my-workshops-list" style="color: var(--text-muted); font-size: 14px;">No upcoming workshops.</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 5. ADMIN VIEW -->
+        <div id="admin-view" class="view-section">
+            <div class="page-header">
+                <h1>Studio Administration</h1>
+                <p>Total studio control: Manage users, daily schedules, workshops, and inbound requests.</p>
+            </div>
+            
+            <div class="dashboard-grid">
+                <!-- Left Column: Studio Tools & Creation -->
+                <div style="grid-column: span 1; display: flex; flex-direction: column; gap: 20px;">
+                    
+                    <!-- Session Check-In Manager -->
+                    <div class="card" style="border-top: 5px solid var(--asu-gold); height: fit-content;">
+                        <div class="card-header"><span style="color: white;">Session Manager (Check-In)</span></div>
+                        <p style="font-size: 12px; color: var(--text-muted); margin-top: 0;">Deduct a session upon arrival/no-show, or restore for studio errors.</p>
+                        <input type="email" id="session-target-email" placeholder="student@asu.edu">
+                        <div style="display: flex; gap: 10px;">
+                            <button onclick="manageSession('deduct')" style="background-color: #1A1A24; color: var(--asu-gold); border: 1px solid var(--asu-gold); padding: 10px; width: 100%; border-radius: 4px; cursor: pointer; font-size: 13px; font-weight: bold;">- Deduct</button>
+                            <button onclick="manageSession('restore')" style="background-color: #1A1A24; color: #10B981; border: 1px solid #10B981; padding: 10px; width: 100%; border-radius: 4px; cursor: pointer; font-size: 13px; font-weight: bold;">+ Restore</button>
+                        </div>
+                    </div>
+
+                    <!-- Workshop Creator -->
+                    <div class="card" style="border-top: 5px solid #8B5CF6; height: fit-content;">
+                        <div class="card-header"><span style="color: white;">Create New Workshop</span></div>
+                        <input type="text" id="new-ws-title" placeholder="Workshop Title (e.g. Intro to Halftones)">
+                        <input type="text" id="new-ws-instructor" placeholder="Instructor Name">
+                        <div style="display: flex; gap: 10px;">
+                            <input type="number" id="new-ws-price" placeholder="Price ($)" style="flex: 1;">
+                            <input type="number" id="new-ws-capacity" placeholder="Total Seats" style="flex: 1;">
+                        </div>
+                        <input type="datetime-local" id="new-ws-date" style="background-color: rgba(0,0,0,0.2); color: white; border: 1px solid var(--border-color); padding: 12px; width: 100%; border-radius: 6px; box-sizing: border-box; margin-bottom: 15px;">
+                        <button onclick="createWorkshop()" style="background-color: #8B5CF6; color: white; border: none; padding: 12px; width: 100%; border-radius: 4px; cursor: pointer; font-weight: bold;">Publish Workshop</button>
+                    </div>
+
+                    <!-- Role Management -->
+                    <div class="card" style="border-top: 5px solid #EF4444; height: fit-content;">
+                        <div class="card-header"><span style="color: white;">Role Management</span></div>
+                        <input type="email" id="target-email" placeholder="user@asu.edu">
+                        <select id="new-role">
+                            <option value="student">Student</option>
+                            <option value="faculty">Faculty</option>
+                            <option value="club">Club</option>
+                            <option value="admin">Admin</option>
+                        </select>
+                        <button onclick="updateRole()" style="background-color: #EF4444; color: white; border: none; padding: 12px; width: 100%; border-radius: 4px; cursor: pointer; font-weight: bold;">Update Permissions</button>
+                    </div>
+                </div>
+
+                <!-- Right Column: Live Dashboards & Inboxes -->
+                <div style="grid-column: span 2; display: flex; flex-direction: column; gap: 20px;">
+                    
+                    <!-- Today's Studio Schedule -->
+                    <div class="card">
+                        <div class="card-header"><span>Upcoming Studio Schedule</span><span style="color: var(--asu-gold);">LIVE</span></div>
+                        <div id="admin-schedule-list" style="color: var(--text-muted); font-size: 14px;">Loading schedule...</div>
+                    </div>
+
+                    <!-- Active Workshops & Rosters -->
+                    <div class="card">
+                        <div class="card-header"><span>Active Workshops & Rosters</span><span style="color: #8B5CF6;">LIVE</span></div>
+                        <div id="admin-active-workshops" style="color: var(--text-muted); font-size: 14px;">Loading workshops...</div>
+                    </div>
+
+                    <!-- Master Screen Pipeline -->
+                    <div class="card">
+                        <div class="card-header"><span>Master Screen Pipeline</span><span style="color: var(--asu-gold);">LIVE</span></div>
+                        <div id="admin-screen-list" style="color: var(--text-muted); font-size: 14px;">Loading screens...</div>
+                    </div>
+
+                    <!-- Faculty & Club Request Inbox -->
+                    <div class="card">
+                        <div class="card-header"><span>Department & Club Request Inbox</span><span style="color: var(--asu-gold);">PENDING</span></div>
+                        <div id="admin-inbox-list" style="color: var(--text-muted); font-size: 14px;">Loading incoming requests...</div>
+                    </div>
+                    
+                </div>
+            </div>
+        </div>
+
+       <!-- Sun Devil Central Link (Now Global at the Bottom) -->
+        <div style="margin-top: 40px; text-align: center; padding: 20px; border: 1px dashed var(--border-color); border-radius: 8px;">
+            <span style="color: var(--text-muted); font-size: 14px;">Not looking for a print pass today? </span>
+            <a href="https://asu.campuslabs.com/engage/organization/generousdevils" target="_blank" style="color: var(--asu-gold); font-weight: bold; text-decoration: none; font-size: 14px;">Claim your free Generous Devils club membership on Sun Devil Central →</a>
+        </div>
+
+        <!-- Portal Footer -->
+        <div style="text-align: center; margin-top: 20px; padding-top: 20px; border-top: 1px solid var(--border-color); color: var(--text-muted); font-size: 12px;">
+            <a href="#" onclick="document.getElementById('policyModal').style.display='flex'" style="color: var(--asu-gold); text-decoration: none;">View Full Studio Rules & Policies</a> • Basement Press Co. • Arizona State University
+        </div>
+
+    </div> <!-- Closes main container -->
+
+    <!-- JAVASCRIPT LOGIC -->
+    <script>
+        document.addEventListener("DOMContentLoaded", () => {
+            const userData = localStorage.getItem('inkwks_user');
+            if (!userData) { window.location.href = "index.html"; return; }
+            
+            const user = JSON.parse(userData);
+            const displayName = user.email.split('@')[0].charAt(0).toUpperCase() + user.email.split('@')[0].slice(1);
+            
+            document.getElementById('display-name').innerText = displayName;
+            document.getElementById('display-email').innerText = user.email;
+
+            if (user.role !== 'admin') {
+                document.getElementById('nav-switch-role-btn').style.display = 'none';
+            }
+
+            enforceView(user.role);
+            fetchPassStatus(user.id);
+            fetchScreens(user.id);
+            fetchFacultyRequests(user.id);
+            fetchClubRequests(user.id);
+            fetchWorkshopData(user.id);
+
+            if (user.role === 'admin') {
+                loadAdminData(user.id);
+            }
+        });
+
+        function enforceView(targetRole) {
+            const user = JSON.parse(localStorage.getItem('inkwks_user'));
+            
+            // Allow admins to go anywhere. Allow students to view workshops. Otherwise, restrict.
+            if (user.role !== 'admin' && targetRole !== user.role && !(user.role === 'student' && targetRole === 'workshop')) {
+                alert("Access Denied."); return;
+            }
+
+            // Fix: Force the nav bar to show on the workshop view regardless of underlying DB role
+            if (targetRole === 'student' || targetRole === 'workshop') {
+                document.getElementById('student-subnav').style.display = 'flex';
+            } else {
+                document.getElementById('student-subnav').style.display = 'none';
+            }
+
+            document.querySelectorAll('.view-section').forEach(el => el.classList.remove('active-view'));
+            const badge = document.getElementById('current-view-badge');
+
+            if (targetRole === 'student') {
+                document.getElementById('student-view').classList.add('active-view');
+                badge.innerText = 'STUDENT PASS';
+            } else if (targetRole === 'faculty') {
+                document.getElementById('faculty-view').classList.add('active-view');
+                badge.innerText = 'FACULTY / STAFF';
+            } else if (targetRole === 'club') {
+                document.getElementById('club-view').classList.add('active-view');
+                badge.innerText = 'STUDENT CLUB';
+            } else if (targetRole === 'workshop') {
+                document.getElementById('workshop-view').classList.add('active-view');
+                badge.innerText = 'WORKSHOP PARTICIPANT';
+            } else if (targetRole === 'admin') {
+                document.getElementById('admin-view').classList.add('active-view');
+                badge.innerText = 'ADMIN PORTAL';
+            }
+            closeRoleModal();
+        }
+
+        function openRoleModal() { document.getElementById('roleGatewayModal').style.display = 'flex'; }
+        function closeRoleModal() { document.getElementById('roleGatewayModal').style.display = 'none'; }
+
+        // Fetch Student Data
+        async function fetchPassStatus(userId) {
+            try {
+                const response = await fetch(`http://127.0.0.1:8000/api/memberships/${userId}`);
+                const data = await response.json();
+                const badgeElement = document.getElementById('pass-status-badge');
+                if (data.has_pass) {
+                    badgeElement.innerText = `ACTIVE (${data.sessions_remaining} LEFT)`;
+                    badgeElement.classList.remove('status-none');
+                    badgeElement.style.backgroundColor = 'rgba(255,198,39,0.1)';
+                    badgeElement.style.color = 'var(--asu-gold)';
+                    badgeElement.style.borderColor = 'var(--asu-gold)';
+                }
+                const aptResponse = await fetch(`http://127.0.0.1:8000/api/appointments/${userId}`);
+                if (aptResponse.ok) {
+                    const appointments = await aptResponse.json();
+                    if (appointments.length > 0) {
+                        document.getElementById('appointment-list').innerHTML = appointments.map(apt => 
+                            `<div style="padding: 10px; background-color: #333; border-radius: 4px; margin-bottom: 10px; color: white;">📅 ${new Date(apt.appointment_time).toLocaleString()} <span style="float: right; color: var(--asu-gold); font-size: 12px;">${apt.status}</span></div>`
+                        ).join('');
+                    }
+                }
+            } catch (e) { console.error(e); }
+        }
+
+        async function submitScreen() {
+            const title = document.getElementById('screen-title').value;
+            const mesh = document.getElementById('screen-mesh').value;
+            const user = JSON.parse(localStorage.getItem('inkwks_user'));
+            if (!title) return alert("Please enter a title.");
+            await fetch('http://127.0.0.1:8000/api/screens', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ user_id: user.id, title: title, mesh: mesh }) });
+            document.getElementById('screen-title').value = '';
+            fetchScreens(user.id);
+        }
+
+        async function fetchScreens(userId) {
+            const res = await fetch(`http://127.0.0.1:8000/api/screens/${userId}`);
+            if (res.ok) {
+                const screens = await res.json();
+                if (screens.length > 0) {
+                    document.getElementById('screen-list').innerHTML = screens.map(s => `<div style="padding: 12px; background-color: #333; border-radius: 6px; margin-bottom: 10px; border-left: 4px solid var(--asu-gold);"><strong style="color: white;">${s.title}</strong> <span style="float: right; color: #10B981; font-size: 12px;">${s.status}</span></div>`).join('');
+                }
+            }
+        }
+
+        // Fetch Faculty Data
+        async function submitFacultyRequest() {
+            const user = JSON.parse(localStorage.getItem('inkwks_user'));
+            const payload = { user_id: user.id, department: document.getElementById('fac-dept').value, course_code: document.getElementById('fac-course').value, category: document.getElementById('fac-category').value, requested_date: document.getElementById('fac-date').value, participants: parseInt(document.getElementById('fac-participants').value) || 0, cost_center: document.getElementById('fac-cost').value, specifications: document.getElementById('fac-specs').value };
+            await fetch('http://127.0.0.1:8000/api/faculty/requests', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+            fetchFacultyRequests(user.id);
+        }
+
+        async function fetchFacultyRequests(userId) {
+            const res = await fetch(`http://127.0.0.1:8000/api/faculty/requests/${userId}`);
+            if (res.ok) {
+                const reqs = await res.json();
+                if (reqs.length > 0) document.getElementById('faculty-request-list').innerHTML = reqs.map(r => `<div style="padding: 10px; background-color: #333; border-radius: 6px; margin-bottom: 10px; border-left: 4px solid #8B5CF6;"><strong style="color: white;">${r.course_code}</strong> <span style="float: right; color: var(--asu-gold); font-size: 12px;">${r.status}</span></div>`).join('');
+            }
+        }
+
+        // Fetch Club Data
+        async function submitClubRequest() {
+            const user = JSON.parse(localStorage.getItem('inkwks_user'));
+            const payload = { user_id: user.id, club_name: document.getElementById('club-name').value, event_deadline: document.getElementById('club-date').value, participants: parseInt(document.getElementById('club-participants').value) || 0, item_quantities: document.getElementById('club-items').value, artwork_link: document.getElementById('club-artwork').value, agreed_to_terms: document.getElementById('club-terms').checked };
+            await fetch('http://127.0.0.1:8000/api/clubs/requests', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+            fetchClubRequests(user.id);
+        }
+
+        async function fetchClubRequests(userId) {
+            const res = await fetch(`http://127.0.0.1:8000/api/clubs/requests/${userId}`);
+            if (res.ok) {
+                const reqs = await res.json();
+                if (reqs.length > 0) document.getElementById('club-request-list').innerHTML = reqs.map(r => `<div style="padding: 10px; background-color: #333; border-radius: 6px; margin-bottom: 10px; border-left: 4px solid #10B981;"><strong style="color: white;">${r.club_name}</strong> <span style="float: right; color: #10B981; font-size: 12px;">${r.status}</span></div>`).join('');
+            }
+        }
+
+        // Fetch Workshop Data
+        async function fetchWorkshopData(userId) {
+            const availRes = await fetch('http://127.0.0.1:8000/api/workshops/available');
+            if (availRes.ok) {
+                const available = await availRes.json();
+                if (available.length > 0) document.getElementById('available-workshops-list').innerHTML = available.map(w => `<div style="padding: 15px; background-color: #222; border-radius: 8px; margin-bottom: 15px; border-left: 4px solid var(--asu-gold); display: flex; justify-content: space-between;"><div><strong style="color: white;">${w.title}</strong><div style="color: var(--text-muted); font-size: 13px;">👨‍🏫 ${w.instructor} | 🪑 ${w.available_seats} Seats Left</div></div><button onclick="registerForWorkshop('${w.id}')" class="switch-role-btn">Register ($${w.price})</button></div>`).join('');
+            }
+            const myRes = await fetch(`http://127.0.0.1:8000/api/workshops/my-registrations/${userId}`);
+            if (myRes.ok) {
+                const myWorkshops = await myRes.json();
+                if (myWorkshops.length > 0) {
+                    const htmlList = myWorkshops.map(w => `<div style="padding: 10px; background-color: #333; border-radius: 4px; margin-bottom: 10px; color: white;"><strong>${w.title}</strong> <span style="float: right; color: #10B981; font-size: 12px;">${w.status}</span></div>`).join('');
+                    document.getElementById('my-workshops-list').innerHTML = htmlList; // Updates the Workshop View
+                    document.getElementById('dashboard-workshop-list').innerHTML = htmlList; // Updates the Student Dashboard!
+                }
+            }
+        }
+
+        async function registerForWorkshop(workshopId) {
+            const user = JSON.parse(localStorage.getItem('inkwks_user'));
+            
+            try {
+                const response = await fetch('http://127.0.0.1:8000/api/workshops/register', { 
+                    method: 'POST', 
+                    headers: { 'Content-Type': 'application/json' }, 
+                    body: JSON.stringify({ user_id: user.id, workshop_id: workshopId }) 
+                });
+                
+                if (response.ok) {
+                    alert("Registration successful! Redirecting back to your dashboard...");
+                    fetchWorkshopData(user.id); 
+                    
+                    // Fix: Unconditionally route the user back to the student view
+                    enforceView('student');
+                    window.scrollTo(0, 0); 
+                } else {
+                    alert("Registration failed. Please try again.");
+                }
+            } catch (error) {
+                console.error("Error during registration:", error);
+            }
+        }
+
+        // Admin Data
+        async function loadAdminData(adminId) {
+            // 1. Fetch Screens
+            const listElement = document.getElementById('admin-screen-list');
+            try {
+                const res = await fetch(`http://127.0.0.1:8000/api/admin/screens?admin_id=${adminId}`);
+                if (res.ok) {
+                    const screens = await res.json();
+                    if (screens.length > 0) {
+                        listElement.innerHTML = screens.map(s => 
+                            `<div style="padding: 15px; background-color: #222; border-radius: 8px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; border-left: 4px solid #EF4444;">
+                                <div>
+                                    <strong style="color: white;">${s.title}</strong> 
+                                    <div style="color: var(--asu-gold); font-size: 12px; margin-top: 4px;">User: ${s.email}</div>
+                                </div>
+                                <div style="display: flex; gap: 10px; align-items: center;">
+                                    <span style="color: #10B981; font-size: 12px; font-weight: bold; text-transform: uppercase;">${s.status}</span>
+                                    <select onchange="updateScreenStatus('${s.id}', this.value)" style="padding: 6px; background: #333; border: 1px solid #555; color: white; width: auto; margin: 0;">
+                                        <option value="">Change...</option>
+                                        <option value="ready">Ready</option>
+                                        <option value="collected">Collected</option>
+                                    </select>
+                                </div>
+                            </div>`
+                        ).join('');
+                    } else {
+                        listElement.innerHTML = "No screens currently in the pipeline.";
+                    }
+                }
+            } catch (error) { console.error("Admin fetch error:", error); }
+
+            // 2. Fetch Workshops for Deletion/Rosters
+            try {
+                const wsRes = await fetch('http://127.0.0.1:8000/api/workshops/available');
+                if (wsRes.ok) {
+                    const workshops = await wsRes.json();
+                    if (workshops.length > 0) {
+                        document.getElementById('admin-active-workshops').innerHTML = workshops.map(w => 
+                            `<div style="padding: 10px; background-color: #222; border-radius: 6px; border-left: 4px solid #8B5CF6; color: white; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center;">
+                                <div><strong>${w.title}</strong> <br><span style="font-size: 12px; color: var(--text-muted);">${w.available_seats} seats remaining</span></div>
+                                <div style="display: flex; gap: 5px;">
+                                    <button onclick="viewRoster('workshop', '${w.id}')" style="background-color: #333; color: white; border: none; padding: 5px 10px; border-radius: 4px; cursor: pointer; font-size: 12px;">Roster</button>
+                                    <button onclick="deleteWorkshop('${w.id}')" style="background-color: rgba(239,68,68,0.2); color: #EF4444; border: 1px solid #EF4444; padding: 5px 10px; border-radius: 4px; cursor: pointer; font-size: 12px;">Delete</button>
+                                </div>
+                            </div>`
+                        ).join('');
+                    } else {
+                        document.getElementById('admin-active-workshops').innerHTML = "No active workshops.";
+                    }
+                }
+            } catch (e) { console.error(e); }
+
+            // 3. Load Schedule & Inbox (Wired to Actions)
+            document.getElementById('admin-schedule-list').innerHTML = `
+                <div style="padding: 10px; background-color: #222; border-radius: 6px; border-left: 4px solid var(--asu-gold); color: white; display: flex; justify-content: space-between; align-items: center;">
+                    <div><strong>Student:</strong> jsmith@asu.edu <br><span style="font-size: 12px; color: var(--text-muted);">10/24/2026 - 1:00 PM</span></div>
+                    <button onclick="viewRoster('session', '123')" style="background-color: #333; color: white; border: none; padding: 5px 10px; border-radius: 4px; cursor: pointer; font-size: 12px;">Details</button>
+                </div>`;
+                
+            document.getElementById('admin-inbox-list').innerHTML = `
+                <div style="padding: 10px; background-color: #222; border-radius: 6px; border-left: 4px solid #8B5CF6; color: white; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center;">
+                    <div><strong>Faculty:</strong> ART 310 (Prof. Adams) <br><span style="font-size: 12px; color: var(--text-muted);">Requested: 24 students</span></div>
+                    <button onclick="reviewRequest('faculty')" style="background-color: #10B981; color: white; border: none; padding: 5px 10px; border-radius: 4px; cursor: pointer;">Review</button>
+                </div>
+                <div style="padding: 10px; background-color: #222; border-radius: 6px; border-left: 4px solid #10B981; color: white; display: flex; justify-content: space-between; align-items: center;">
+                    <div><strong>Club:</strong> Printmaking Guild <br><span style="font-size: 12px; color: var(--text-muted);">T-Shirt Run (50 shirts)</span></div>
+                    <button onclick="reviewRequest('club')" style="background-color: #10B981; color: white; border: none; padding: 5px 10px; border-radius: 4px; cursor: pointer;">Review</button>
+                </div>`;
+        }
+
+        async function updateScreenStatus(screenId, newStatus) {
+            if (!newStatus) return;
+            const user = JSON.parse(localStorage.getItem('inkwks_user'));
+            await fetch(`http://127.0.0.1:8000/api/admin/screens/${screenId}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ admin_id: user.id, status: newStatus }) });
+            loadAdminData(user.id);
+        }
+
+        async function updateRole() {
+            const user = JSON.parse(localStorage.getItem('inkwks_user'));
+            await fetch('http://127.0.0.1:8000/api/admin/roles', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ admin_id: user.id, target_email: document.getElementById('target-email').value, new_role: document.getElementById('new-role').value }) });
+            document.getElementById('admin-message').innerText = "Role Updated!";
+            document.getElementById('admin-message').style.color = "#4CAF50";
+        }
+
+        async function manageSession(action) {
+            const email = document.getElementById('session-target-email').value;
+            if (!email) {
+                alert("Please enter the student's email.");
+                return;
+            }
+            
+            const user = JSON.parse(localStorage.getItem('inkwks_user'));
+
+            try {
+                const response = await fetch('http://127.0.0.1:8000/api/admin/sessions', {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        admin_id: user.id,
+                        target_email: email,
+                        action: action // "deduct" or "restore"
+                    })
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    alert(`Success: ${data.message}\nSessions Remaining: ${data.sessions_remaining}`);
+                    document.getElementById('session-target-email').value = ''; // clear the input
+                } else {
+                    alert(`Error: ${data.detail}`);
+                }
+            } catch (error) {
+                console.error("Session management error:", error);
+                alert("Connection error to server. Is your FastAPI backend running?");
+            }
+        }
+
+        function initiatePurchase() {
+            const termsChecked = document.getElementById('purchase-terms').checked;
+            if (!termsChecked) {
+                alert("Action Required: Please check the box acknowledging the studio rules, what to bring, and cancellation policies before purchasing.");
+                return;
+            }
+            
+            // Redirect the user to your actual Square Checkout link
+            window.open("https://square.link/your-actual-checkout-link", "_blank");
+            
+            // Optional: Update the UI to show they initiated checkout
+            const badge = document.getElementById('pass-status-badge');
+            badge.innerText = "AWAITING PAYMENT";
+            badge.classList.remove('status-none');
+            badge.style.backgroundColor = '#333';
+            badge.style.color = 'white';
+            badge.style.borderColor = 'white';
+        }
+
+        function bookSession() {
+            document.getElementById('bookingModal').style.display = 'flex';
+            document.getElementById('booking-error').innerText = ''; // Clear old errors
+        }
+
+        function closeBookingModal() {
+            document.getElementById('bookingModal').style.display = 'none';
+        }
+
+        async function confirmBooking() {
+            const aptTime = document.getElementById('appointment-time').value;
+            if (!aptTime) {
+                document.getElementById('booking-error').innerText = "Please select a date and time.";
+                return;
+            }
+            
+            const user = JSON.parse(localStorage.getItem('inkwks_user'));
+            
+            try {
+                const response = await fetch('http://127.0.0.1:8000/api/appointments', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        user_id: user.id,
+                        appointment_time: aptTime
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    alert("Session booked successfully!");
+                    closeBookingModal();
+                    fetchPassStatus(user.id); // Instantly refresh the UI list
+                } else {
+                    document.getElementById('booking-error').innerText = data.detail || "Error booking session. Do you have an active pass?";
+                }
+            } catch (error) {
+                console.error("Booking error:", error);
+                document.getElementById('booking-error').innerText = "Connection error to server.";
+            }
+        }
+        
+        async function createWorkshop() {
+            const title = document.getElementById('new-ws-title').value;
+            const instructor = document.getElementById('new-ws-instructor').value;
+            const price = document.getElementById('new-ws-price').value;
+            const capacity = document.getElementById('new-ws-capacity').value;
+            const date = document.getElementById('new-ws-date').value;
+
+            if (!title || !price || !capacity || !date) {
+                alert("Please fill in the title, price, capacity, and date."); return;
+            }
+
+            const user = JSON.parse(localStorage.getItem('inkwks_user'));
+
+            try {
+                const response = await fetch('http://127.0.0.1:8000/api/admin/workshops', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        admin_id: user.id,
+                        title: title,
+                        instructor: instructor || "TBA",
+                        price: parseFloat(price),
+                        available_seats: parseInt(capacity),
+                        workshop_date: date
+                    })
+                });
+
+                if (response.ok) {
+                    alert("Workshop published successfully!");
+                    // Clear the form fields
+                    document.getElementById('new-ws-title').value = '';
+                    document.getElementById('new-ws-instructor').value = '';
+                    document.getElementById('new-ws-price').value = '';
+                    document.getElementById('new-ws-capacity').value = '';
+                    document.getElementById('new-ws-date').value = '';
+                    
+                    // Refresh the live admin list
+                    loadAdminData(user.id); 
+                } else {
+                    const error = await response.json();
+                    alert(`Error: ${error.detail}`);
+                }
+            } catch (error) {
+                console.error("Error creating workshop:", error);
+                alert("Connection error to server. Is FastAPI running?");
+            }
+        }
+
+        async function deleteWorkshop(workshopId) {
+            if(!confirm("Are you sure you want to permanently delete this workshop? This will also remove any student registrations for it.")) return;
+            
+            const user = JSON.parse(localStorage.getItem('inkwks_user'));
+            
+            try {
+                // Pass the admin ID in the URL for security verification
+                const response = await fetch(`http://127.0.0.1:8000/api/workshops/${workshopId}?admin_id=${user.id}`, {
+                    method: 'DELETE'
+                });
+                
+                if (response.ok) {
+                    alert("Workshop deleted successfully.");
+                    loadAdminData(user.id); // Refresh admin list
+                    fetchWorkshopData(user.id); // Refresh public student list
+                } else {
+                    const data = await response.json();
+                    alert(`Error: ${data.detail}`);
+                }
+            } catch (e) {
+                alert("Connection error to server.");
+            }
+        }
+
+        async function loadAdminData(adminId) {
+            // 1. Fetch Screens
+            try {
+                const res = await fetch(`http://127.0.0.1:8000/api/admin/screens?admin_id=${adminId}`);
+                if (res.ok) {
+                    const screens = await res.json();
+                    document.getElementById('admin-screen-list').innerHTML = screens.length > 0 ? 
+                        screens.map(s => 
+                            `<div style="padding: 15px; background-color: #222; border-radius: 8px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; border-left: 4px solid #EF4444;">
+                                <div><strong style="color: white;">${s.title}</strong><div style="color: var(--asu-gold); font-size: 12px; margin-top: 4px;">User: ${s.email}</div></div>
+                                <div style="display: flex; gap: 10px; align-items: center;">
+                                    <span style="color: #10B981; font-size: 12px; font-weight: bold; text-transform: uppercase;">${s.status}</span>
+                                    <select onchange="updateScreenStatus('${s.id}', this.value)" style="padding: 6px; background: #333; border: 1px solid #555; color: white; width: auto; margin: 0;"><option value="">Change...</option><option value="ready">Ready</option><option value="collected">Collected</option></select>
+                                </div>
+                            </div>`
+                        ).join('') : "No screens currently in the pipeline.";
+                }
+            } catch (error) { console.error(error); }
+
+            // 2. Fetch Workshops
+            try {
+                const wsRes = await fetch('http://127.0.0.1:8000/api/workshops/available');
+                if (wsRes.ok) {
+                    const workshops = await wsRes.json();
+                    document.getElementById('admin-active-workshops').innerHTML = workshops.length > 0 ? 
+                        workshops.map(w => 
+                            `<div style="padding: 10px; background-color: #222; border-radius: 6px; border-left: 4px solid #8B5CF6; color: white; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center;">
+                                <div><strong>${w.title}</strong> <br><span style="font-size: 12px; color: var(--text-muted);">${w.available_seats} seats remaining</span></div>
+                                <div style="display: flex; gap: 5px;">
+                                    <button onclick="viewRoster('workshop', '${w.id}')" style="background-color: #333; color: white; border: none; padding: 5px 10px; border-radius: 4px; cursor: pointer; font-size: 12px;">Roster</button>
+                                    <button onclick="deleteWorkshop('${w.id}')" style="background-color: rgba(239,68,68,0.2); color: #EF4444; border: 1px solid #EF4444; padding: 5px 10px; border-radius: 4px; cursor: pointer; font-size: 12px;">Delete</button>
+                                </div>
+                            </div>`
+                        ).join('') : "No active workshops.";
+                }
+            } catch (e) { console.error(e); }
+
+            // 3. Fetch LIVE Schedule
+            try {
+                const schedRes = await fetch(`http://127.0.0.1:8000/api/admin/schedule?admin_id=${adminId}`);
+                if (schedRes.ok) {
+                    const schedule = await schedRes.json();
+                    document.getElementById('admin-schedule-list').innerHTML = schedule.length > 0 ? 
+                        schedule.map(s => 
+                            `<div style="padding: 10px; background-color: #222; border-radius: 6px; border-left: 4px solid var(--asu-gold); color: white; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center;">
+                                <div><strong>Student:</strong> ${s.email} <br><span style="font-size: 12px; color: var(--text-muted);">${new Date(s.appointment_time).toLocaleString()}</span></div>
+                            </div>`
+                        ).join('') : "No upcoming sessions booked.";
+                }
+            } catch (e) { console.error(e); }
+
+            // 4. Fetch LIVE Inbox
+            try {
+                const inboxRes = await fetch(`http://127.0.0.1:8000/api/admin/inbox?admin_id=${adminId}`);
+                if (inboxRes.ok) {
+                    const inbox = await inboxRes.json();
+                    const allRequests = [...inbox.faculty, ...inbox.clubs];
+                    
+                    document.getElementById('admin-inbox-list').innerHTML = allRequests.length > 0 ? 
+                        allRequests.map(r => 
+                            `<div style="padding: 10px; background-color: #222; border-radius: 6px; border-left: 4px solid ${r.type === 'faculty' ? '#8B5CF6' : '#10B981'}; color: white; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center;">
+                                <div><strong style="text-transform: capitalize;">${r.type}:</strong> ${r.title} <br><span style="font-size: 12px; color: var(--text-muted);">Requested: ${r.participants} participants</span></div>
+                                <button onclick="reviewRequest('${r.type}', '${r.id}')" style="background-color: #10B981; color: white; border: none; padding: 5px 10px; border-radius: 4px; cursor: pointer;">Approve</button>
+                            </div>`
+                        ).join('') : "No pending requests.";
+                }
+            } catch (e) { console.error(e); }
+        }
+
+        async function reviewRequest(type, id) {
+            if(!confirm("Mark this request as Approved?")) return;
+            const user = JSON.parse(localStorage.getItem('inkwks_user'));
+            
+            try {
+                const response = await fetch('http://127.0.0.1:8000/api/admin/inbox/review', {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ admin_id: user.id, request_type: type, request_id: id, new_status: 'approved' })
+                });
+                
+                if (response.ok) {
+                    alert("Request approved successfully.");
+                    loadAdminData(user.id); // Instantly removes it from the inbox
+                } else {
+                    alert("Failed to update request.");
+                }
+            } catch (e) { console.error(e); }
+        }
+
+        async function viewRoster(type, id) {
+            const user = JSON.parse(localStorage.getItem('inkwks_user'));
+            try {
+                const response = await fetch(`http://127.0.0.1:8000/api/admin/roster/${type}/${id}?admin_id=${user.id}`);
+                if (response.ok) {
+                    const roster = await response.json();
+                    if (roster.length > 0) {
+                        alert(`REGISTERED STUDENTS:\n\n${roster.join('\n')}`);
+                    } else {
+                        alert("No students are currently registered for this.");
+                    }
+                }
+            } catch (e) { console.error(e); }
+        }
+
+    </script>
+</body>
+</html>

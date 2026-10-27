@@ -1,0 +1,623 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>INKWKS Membership | Studio Access Portal</title>
+    <style>
+        :root {
+            --asu-gold: #FFC627;
+            --bg-main: #FFFFFF;
+            --card-bg: #FFFFFF;
+            --text-main: #000000;
+            --text-muted: #555555;
+            --border-color: #000000;
+            --input-bg: #FFFFFF;
+        }
+        body { background-color: var(--bg-main); color: var(--text-main); font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; margin: 0; padding: 0; }
+        .navbar { display: flex; justify-content: space-between; align-items: center; padding: 15px 40px; background-color: var(--card-bg); border-bottom: 2px solid var(--border-color); }
+        .nav-brand { font-weight: bold; font-size: 18px; letter-spacing: 1px; color: var(--text-main); text-transform: uppercase; }
+        .nav-controls { display: flex; align-items: center; gap: 20px; }
+        .role-badge { border: 2px solid var(--text-main); color: var(--text-main); background-color: var(--asu-gold); padding: 5px 15px; border-radius: 20px; font-size: 12px; text-transform: uppercase; font-weight: bold; }
+        .switch-role-btn { background-color: var(--text-main); color: var(--bg-main); border: 2px solid var(--text-main); padding: 8px 16px; border-radius: 4px; font-weight: bold; cursor: pointer; transition: all 0.2s; }
+        .switch-role-btn:hover { background-color: var(--asu-gold); color: var(--text-main); }
+        .btn-gold { background-color: var(--asu-gold); color: var(--text-main); }
+        .btn-gold:hover { background-color: var(--text-main); color: var(--asu-gold); }
+        .user-profile { text-align: right; line-height: 1.2; }
+        .user-name { font-weight: bold; color: var(--text-main); }
+        .user-email { font-size: 12px; color: var(--text-muted); font-weight: bold; }
+        .container { padding: 40px; max-width: 1400px; margin: 0 auto; }
+        .page-header { margin-bottom: 40px; }
+        .page-header h1 { margin: 0 0 5px 0; font-size: 36px; color: var(--text-main); text-transform: uppercase; font-weight: 900; }
+        .page-header p { color: var(--text-muted); margin: 0; font-size: 15px; max-width: 800px; line-height: 1.6; }
+        .dashboard-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 25px; }
+        .card { background-color: var(--card-bg); padding: 25px; border-radius: 8px; border: 2px solid var(--border-color); }
+        .card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; text-transform: uppercase; font-size: 13px; font-weight: 900; color: var(--text-main); border-bottom: 2px solid var(--text-main); padding-bottom: 10px; }
+        .status-badge { padding: 4px 10px; border-radius: 4px; font-weight: bold; border: 2px solid var(--text-main); font-size: 11px; }
+        .status-none { background-color: var(--text-main); color: var(--bg-main); }
+        input, select, textarea { width: 100%; padding: 12px; margin-bottom: 15px; background-color: var(--input-bg); color: var(--text-main); border: 2px solid var(--border-color); border-radius: 4px; box-sizing: border-box; font-weight: bold; }
+        input:focus, select:focus, textarea:focus { outline: none; border-color: var(--asu-gold); }
+        .view-section { display: none; }
+        .active-view { display: block; }
+        .tag-live { background-color: var(--asu-gold); color: var(--text-main); border: 2px solid var(--text-main); padding: 2px 8px; border-radius: 12px; font-size: 10px; }
+        .tag-pending { background-color: var(--text-main); color: var(--bg-main); border: 2px solid var(--text-main); padding: 2px 8px; border-radius: 12px; font-size: 10px; }
+        .nav-btn { padding: 8px 16px; border: 2px solid var(--text-main); border-radius: 4px; text-decoration: none; color: var(--text-main); background-color: var(--bg-main); white-space: nowrap; transition: background-color 0.2s; font-size: 13px; font-weight: bold; cursor: pointer; }
+        .nav-btn:hover { background-color: #E0E0E0; }
+        .nav-btn.nav-btn-active { background-color: var(--asu-gold); }
+    </style>
+</head>
+<body>
+
+    <!-- NAV BAR -->
+    <nav class="navbar">
+        <div class="nav-brand"><span style="border-bottom: 4px solid var(--asu-gold); padding-bottom: 2px;">INKWKS Membership</span><br><span style="font-size: 11px; color: var(--text-muted); font-weight: bold;">Basement Press Co.</span></div>
+        <div class="nav-controls">
+            <div class="role-badge" id="current-view-badge"></div>
+            <button id="nav-switch-role-btn" class="switch-role-btn btn-gold" onclick="openRoleModal()">Switch Role</button>
+            <div class="user-profile"><div class="user-name" id="display-name"></div><div class="user-email" id="display-email"></div></div>
+        </div>
+    </nav>
+
+    <!-- ROLE MODAL GATEWAY -->
+    <div id="roleGatewayModal" style="display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.8); align-items: center; justify-content: center;">
+        <div style="background-color: var(--card-bg); padding: 40px; border-radius: 8px; width: 100%; max-width: 600px; border: 4px solid var(--text-main); position: relative;">
+            <div style="text-align: center; margin-bottom: 30px;"><span style="background-color: var(--text-main); color: var(--bg-main); padding: 5px 15px; border-radius: 20px; font-size: 12px; font-weight: bold; border: 2px solid var(--text-main); text-transform: uppercase;">Portal Access</span><h2 style="margin-top: 15px; font-size: 28px; color: var(--text-main); font-weight: 900; text-transform: uppercase;">Welcome</h2></div>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+                <button onclick="enforceView('student')" style="background-color: var(--input-bg); border: 2px solid var(--text-main); color: var(--text-main); padding: 20px; border-radius: 8px; display: flex; align-items: center; justify-content: space-between; cursor: pointer;">
+                    <div style="display: flex; align-items: center; gap: 10px;"><span style="background-color: var(--asu-gold); border: 2px solid var(--text-main); padding: 8px; border-radius: 4px;">👤</span><span style="font-weight: bold; font-size: 16px;">Student Pass</span></div><span style="color: var(--text-main); font-weight: 900;">→</span>
+                </button>
+                <button onclick="enforceView('faculty')" style="background-color: var(--input-bg); border: 2px solid var(--text-main); color: var(--text-main); padding: 20px; border-radius: 8px; display: flex; align-items: center; justify-content: space-between; cursor: pointer;">
+                    <div style="display: flex; align-items: center; gap: 10px;"><span style="background-color: #E0E0E0; border: 2px solid var(--text-main); padding: 8px; border-radius: 4px;">🎓</span><span style="font-weight: bold; font-size: 16px;">Faculty / Staff</span></div><span style="color: var(--text-main); font-weight: 900;">→</span>
+                </button>
+                <button onclick="enforceView('admin')" style="background-color: var(--text-main); border: 2px solid var(--text-main); color: var(--bg-main); padding: 20px; border-radius: 8px; display: flex; align-items: center; justify-content: space-between; cursor: pointer; grid-column: span 2;">
+                    <div style="display: flex; align-items: center; gap: 10px;"><span style="background-color: var(--bg-main); border: 2px solid var(--text-main); color: var(--text-main); padding: 8px; border-radius: 4px;">🔑</span><span style="font-weight: bold; font-size: 16px;">Admin Portal</span></div><span style="color: var(--asu-gold); font-weight: 900;">→</span>
+                </button>
+            </div>
+            <button onclick="closeRoleModal()" style="position: absolute; top: 15px; right: 20px; background: none; border: none; color: var(--text-main); font-size: 24px; font-weight: bold; cursor: pointer;">×</button>
+        </div>
+    </div>
+
+    <!-- DYNAMIC BOOKING MODAL -->
+    <div id="bookingModal" style="display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.8); align-items: center; justify-content: center;">
+        <div style="background-color: var(--card-bg); padding: 30px; border-radius: 8px; width: 100%; max-width: 500px; border: 4px solid var(--text-main); position: relative;">
+            <h2 style="margin-top: 0; color: var(--text-main); font-weight: 900; text-transform: uppercase;">Book a Studio Session</h2>
+            <div style="background-color: var(--input-bg); padding: 15px; border-radius: 4px; margin-bottom: 20px; font-size: 13px; color: var(--text-main); line-height: 1.6; border: 2px solid var(--border-color);">
+                <strong style="background-color: var(--asu-gold); padding: 2px 6px; border: 2px solid var(--text-main);">EXPECTATIONS & RULES:</strong><br><br>
+                • Arrive on time. Sessions are strictly limited to your reserved time block.<br>
+                • Cancellations must be made prior to the posted deadline to avoid forfeiting your session.
+            </div>
+            <label style="color: var(--text-main); font-size: 14px; font-weight: bold; margin-bottom: 10px; display: block; text-transform: uppercase;">Select Available Session:</label>
+            <select id="appointment-slot-id" style="border: 2px solid var(--text-main);"></select>
+            <p id="booking-error" style="color: var(--text-main); font-weight: bold; font-size: 14px; margin-top: 0;"></p>
+            <button onclick="confirmBooking()" class="switch-role-btn btn-gold" style="width: 100%; padding: 15px; font-size: 16px;">Acknowledge & Confirm Reservation</button>
+            <button onclick="closeBookingModal()" style="position: absolute; top: 15px; right: 20px; background: none; border: none; color: var(--text-main); font-weight: bold; font-size: 24px; cursor: pointer;">×</button>
+        </div>
+    </div>
+
+    <!-- CORE STUDIO POLICY MODAL -->
+    <div id="policyModal" style="display: none; position: fixed; z-index: 1100; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.8); align-items: center; justify-content: center; padding: 20px;">
+        <div style="background-color: var(--card-bg); padding: 40px; border-radius: 8px; width: 100%; max-width: 700px; max-height: 85vh; overflow-y: auto; border: 4px solid var(--text-main); position: relative;">
+            <h2 style="color: var(--text-main); font-weight: 900; margin-top: 0; border-bottom: 4px solid var(--asu-gold); padding-bottom: 10px; text-transform: uppercase;">Basement Press Co. Studio Policy</h2>
+            <div style="color: var(--text-main); font-size: 13px; line-height: 1.6; margin-top: 20px;">
+                <p>Passes are nonrefundable. Participation is subject to studio capacity, equipment condition, staffing, and safety compliance.</p>
+            </div>
+            <button onclick="document.getElementById('policyModal').style.display='none'" class="switch-role-btn btn-gold" style="width: 100%; margin-top: 20px; padding: 15px; font-size: 16px;">Close</button>
+        </div>
+    </div>
+
+    <!-- MAIN CONTAINER -->
+    <div class="container">
+        <!-- Student Portal Navigation -->
+        <div id="student-subnav" style="display: none; background-color: var(--card-bg); padding: 15px 20px; border-radius: 8px; border: 2px solid var(--text-main); margin-bottom: 25px; gap: 12px; font-size: 13px; font-weight: bold; overflow-x: auto; align-items: center;">
+            <a href="#" class="nav-btn nav-btn-active" onclick="setActiveNav(this); enforceView('student')">Dashboard</a>
+            <a href="#" class="nav-btn" onclick="setActiveNav(this); openBookingModal()">Book a Session</a>
+            <a href="#pass-status-badge" class="nav-btn" onclick="setActiveNav(this); enforceView('student')">My Pass</a>
+            <a href="#" class="nav-btn" onclick="setActiveNav(this); enforceView('workshop')">Workshops</a>
+            <a href="#materials-store" class="nav-btn" onclick="setActiveNav(this); enforceView('student')">Materials & Add-Ons</a>
+            <a href="#" class="nav-btn" onclick="setActiveNav(this); document.getElementById('policyModal').style.display='flex'">Rules & Safety</a>
+        </div>
+
+        <!-- 1. STUDENT VIEW -->
+        <div id="student-view" class="view-section active-view">
+            <div class="page-header" style="max-width: 900px; border-bottom: 2px solid var(--border-color); padding-bottom: 20px;">
+                <h1>Student Print Pass</h1>
+                <p>The Generous Devils Print Pass gives ASU students three supervised visits to the Basement Press Co. screen-printing studio for $25. Learn the process, use professional equipment, and bring a project from screen preparation to final print without buying an entire print shop yourself.</p>
+                <p>Each session is up to three hours. Your pass includes shared screen-printing tools, standard cleanup supplies, black ink, orientation, and one standard screen preparation and exposure. Bring your own shirts, paper, bags, or other approved printable items.<br><br><em>Specialty inks, transparencies, additional screens, artwork corrections, and replacement materials may require an additional fee. Studio access is subject to staffing, capacity, equipment condition, and completion of required safety training.</em></p>
+            </div>
+
+            <div class="dashboard-grid">
+                <!-- Pass Status -->
+                <div class="card" style="grid-column: span 1;">
+                    <div class="card-header"><span>Active Print Pass</span><span class="status-badge status-none" id="pass-status-badge">NO ACTIVE PASS</span></div>
+                    <div id="pass-expiration-display" style="display: none; font-size: 12px; color: var(--text-main); margin-top: -5px; margin-bottom: 15px; font-weight: bold; padding: 4px 8px; border: 2px solid var(--text-main);"></div>
+                    
+                    <div style="margin-bottom: 15px;">
+                        <strong style="color: var(--text-main); font-size: 14px;">Before you purchase</strong>
+                        <p style="color: var(--text-muted); font-size: 13px; line-height: 1.5; margin-top: 5px;">
+                            Review the full studio-use, cancellation, expiration, cleanup, and safety policies. Passes are assigned to the purchaser and may not be shared. Completing payment does not guarantee a specific appointment time; sessions must be booked based on studio availability.
+                        </p>
+                    </div>
+
+                    <div style="background-color: var(--input-bg); border: 2px solid var(--text-main); padding: 12px; margin: 15px 0; border-radius: 4px;">
+                        <label style="display: flex; gap: 10px; align-items: flex-start; cursor: pointer; font-size: 12px; line-height: 1.5; color: var(--text-main); font-weight: bold;">
+                            <input type="checkbox" id="purchase-terms" style="margin-top: 2px; width: auto; accent-color: var(--text-main);">
+                            <span>I understand what is included, what I must bring, when my pass expires, and that purchases and reservations are subject to the cancellation, safety, and studio-use policies.</span>
+                        </label>
+                    </div>
+                    <button class="switch-role-btn btn-gold" style="width: 100%; padding: 12px; font-size: 14px;" onclick="initiatePurchase()">Buy 3 Sessions for $25</button>
+                    
+                    <div style="background-color: var(--text-main); color: var(--bg-main); padding: 12px; margin-top: 15px; border-radius: 4px;">
+                        <strong style="color: var(--asu-gold); font-size: 12px; text-transform: uppercase; letter-spacing: 1px;">Important Notice</strong>
+                        <p style="color: #E0E0E0; font-size: 12px; margin: 5px 0 0 0; line-height: 1.4;">The pass does not guarantee a perfect final product. Screen printing involves testing, registration, setup, and the possibility of misprints.</p>
+                    </div>
+                </div>
+
+                <!-- Included Offerings -->
+                <div class="card" style="grid-column: span 1;">
+                    <div class="card-header"><span>Included in Pass</span></div>
+                    <ul style="list-style: none; padding: 0; margin: 0; color: var(--text-main); font-size: 13px; line-height: 1.6; font-weight: bold;">
+                        <li>• Three supervised studio sessions (up to 3 hrs each)</li>
+                        <li>• Shared tools, presses, and washout/drying equipment</li>
+                        <li>• Standard black ink and basic cleanup supplies</li>
+                        <li>• Reclaimed test paper when available</li>
+                        <li>• Guidance from a trained studio monitor</li>
+                        <li style="margin-top: 15px; display: flex; align-items: center; justify-content: space-between; border-top: 2px dashed var(--border-color); padding-top: 15px;">
+                            <span style="color: var(--text-main); text-transform: uppercase;"><strong>Equipment Orientation:</strong></span>
+                            <span id="orientation-status-badge" style="background-color: var(--bg-main); color: var(--text-main); padding: 4px 10px; border-radius: 4px; font-size: 11px; font-weight: bold; border: 2px solid var(--text-main);">PENDING</span>
+                        </li>
+                    </ul>
+                    
+                    <div style="background-color: var(--input-bg); border: 2px solid var(--text-main); border-radius: 4px; padding: 12px; margin-top: 20px;">
+                        <p style="color: var(--text-main); font-size: 12px; margin: 0; line-height: 1.5; font-weight: bold;">One standard screen preparation and exposure is included with each three-session pass. Additional screens, artwork corrections, transparencies, and screen re-exposure may require an additional fee.</p>
+                    </div>
+                </div>
+
+                <!-- What to Bring Checklist -->
+                <div class="card" style="grid-column: span 1;">
+                    <div class="card-header"><span>What to Bring</span></div>
+                    <ul style="list-style: none; padding: 0; margin: 0; color: var(--text-main); font-size: 13px; line-height: 1.8; font-weight: bold;">
+                        <li>• Screen done ahead of time.</li>
+                        <li>• Approved shirts, paper, bags, or other printable items</li>
+                        <li>• Transparency paid at time of booking.</li>
+                        <li>• An apron or clothes that can get dirty. We are not responsible.</li>
+                        <li>• Any specialty ink or project-specific material not included in the pass</li>
+                        <li style="margin-top: 15px; padding: 10px; border: 2px solid var(--text-main); background-color: #E0E0E0;"><strong>[!] Closed-toe shoes are required for studio entry.</strong></li>
+                    </ul>
+                </div>
+            </div>
+            
+            <div class="dashboard-grid" style="margin-top: 20px;">
+                <div style="grid-column: span 2; display: flex; flex-direction: column; gap: 20px;">
+                    <!-- Unified Schedule -->
+                    <div class="card">
+                        <div class="card-header"><span>My Schedule & Registrations</span><button onclick="openBookingModal()" class="switch-role-btn btn-gold" style="padding: 6px 12px; font-size: 11px;">+ BOOK SESSION</button></div>
+                        <div style="font-size: 12px; color: var(--text-main); margin-bottom: 10px; font-weight: 900; text-transform: uppercase; background-color: #E0E0E0; padding: 4px 8px; display: inline-block;">Studio Sessions</div>
+                        <div id="appointment-list" style="color: var(--text-muted); font-size: 13px; margin-bottom: 20px; font-weight: bold;"></div>
+                        <div style="font-size: 12px; color: var(--text-main); margin-bottom: 10px; font-weight: 900; text-transform: uppercase; background-color: #E0E0E0; padding: 4px 8px; display: inline-block;">Registered Workshops</div>
+                        <div id="dashboard-workshop-list" style="color: var(--text-muted); font-size: 13px; font-weight: bold;"></div>
+                    </div>
+                </div>
+                <!-- Materials Store -->
+                <div id="materials-store" class="card" style="grid-column: span 1; height: fit-content;">
+                    <div class="card-header"><span>📦 Materials & Add-Ons</span></div>
+                    <div style="display: flex; justify-content: space-between; align-items: center; padding: 12px 0; border-bottom: 1px solid var(--border-color);">
+                        <div><div style="font-weight: 900; font-size: 13px; color: var(--text-main); text-transform: uppercase;">Extra Session</div></div>
+                        <span style="background-color: var(--text-main); color: var(--bg-main); padding: 4px 10px; border-radius: 4px; font-size: 12px; font-weight: bold;">$15</span>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; align-items: center; padding: 12px 0;">
+                        <div><div style="font-weight: 900; font-size: 13px; color: var(--text-main); text-transform: uppercase;">Transparency Output</div></div>
+                        <span style="background-color: var(--text-main); color: var(--bg-main); padding: 4px 10px; border-radius: 4px; font-size: 12px; font-weight: bold;">$5</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 2. FACULTY VIEW -->
+        <div id="faculty-view" class="view-section">
+            <div class="page-header"><h1>Faculty Services</h1><p>Reserve Basement Press Co. for class workshops.</p></div>
+            <div class="dashboard-grid">
+                <div class="card" style="grid-column: span 2;">
+                    <div class="card-header"><span>Submit Workshop Request</span></div>
+                    <div style="display: flex; gap: 15px;"><input type="text" id="fac-dept" placeholder="Department (e.g. HIDA)" style="flex: 1;"><input type="text" id="fac-course" placeholder="Course (e.g. ART 310)" style="flex: 1;"></div>
+                    <select id="fac-category"><option value="Class Workshop">Class Workshop</option></select>
+                    <div style="display: flex; gap: 15px;"><input type="date" id="fac-date" style="flex: 1;"><input type="number" id="fac-participants" placeholder="Est. Participants" style="flex: 1;"></div>
+                    <input type="text" id="fac-cost" placeholder="Cost-Center / Invoice ID">
+                    <textarea id="fac-specs" rows="3" placeholder="Project specifications..."></textarea>
+                    <button class="switch-role-btn btn-gold" style="width: 100%; padding: 15px; font-size: 14px;" onclick="submitFacultyRequest()">Submit Faculty Request</button>
+                </div>
+                <div class="card" style="grid-column: span 1; height: fit-content; margin-bottom: 20px;">
+                    <div class="card-header"><span>My Departmental Requests</span></div>
+                    <div id="faculty-request-list" style="color: var(--text-muted); font-size: 14px; font-weight: bold;"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 4. WORKSHOP VIEW -->
+        <div id="workshop-view" class="view-section">
+            <div class="page-header" style="display: flex; justify-content: space-between; align-items: flex-start;">
+                <div><h1>Studio Workshops</h1><p>Register for scheduled learning experiences.</p></div>
+                <button onclick="setActiveNav(document.querySelector('.nav-btn')); enforceView('student')" class="switch-role-btn" style="background-color: var(--card-bg); color: var(--text-main);">← Back to Dashboard</button>
+            </div>
+            <div class="dashboard-grid">
+                <div class="card" style="grid-column: span 2;">
+                    <div class="card-header"><span>Upcoming Workshops</span></div>
+                    <div id="available-workshops-list"></div>
+                </div>
+                <div class="card" style="grid-column: span 1; height: fit-content;">
+                    <div class="card-header"><span>My Registrations</span></div>
+                    <div id="my-workshops-list"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 5. ADMIN VIEW -->
+        <div id="admin-view" class="view-section">
+            <div class="page-header"><h1>Admin Command Center</h1></div>
+            <div class="dashboard-grid">
+                <!-- Left Column Tools -->
+                <div style="grid-column: span 1; display: flex; flex-direction: column; gap: 20px;">
+                    <div class="card" style="border-left: 8px solid var(--text-main); height: fit-content;">
+                        <div class="card-header"><span>Session Check-In</span></div>
+                        <input type="email" id="session-target-email" placeholder="student@asu.edu">
+                        <div style="display: flex; gap: 10px;">
+                            <button onclick="manageSession('deduct')" class="switch-role-btn" style="background-color: var(--card-bg); color: var(--text-main); width: 100%;">- Deduct</button>
+                            <button onclick="manageSession('restore')" class="switch-role-btn" style="background-color: var(--card-bg); color: var(--text-main); width: 100%;">+ Restore</button>
+                        </div>
+                    </div>
+
+                    <div class="card" style="border-left: 8px solid var(--asu-gold); height: fit-content;">
+                        <div class="card-header"><span>Open Studio Sessions</span></div>
+                        <input type="datetime-local" id="new-slot-date" style="margin-bottom: 15px;">
+                        <input type="number" id="new-slot-capacity" placeholder="Available Seats">
+                        <button onclick="createSessionSlot()" class="switch-role-btn btn-gold" style="width: 100%; padding: 12px; font-size: 14px;">Publish Session Slot</button>
+                    </div>
+
+                    <div class="card" style="border-left: 8px solid var(--text-main); height: fit-content;">
+                        <div class="card-header"><span>Create Workshop</span></div>
+                        <input type="text" id="new-ws-title" placeholder="Workshop Title"><input type="text" id="new-ws-instructor" placeholder="Instructor Name">
+                        <div style="display: flex; gap: 10px;"><input type="number" id="new-ws-price" placeholder="Price ($)" style="flex: 1;"><input type="number" id="new-ws-capacity" placeholder="Total Seats" style="flex: 1;"></div>
+                        <input type="datetime-local" id="new-ws-date" style="margin-bottom: 15px;">
+                        <button onclick="createWorkshop()" class="switch-role-btn" style="width: 100%;">Publish Workshop</button>
+                    </div>
+                </div>
+
+                <!-- Right Column Dashboards -->
+                <div style="grid-column: span 2; display: flex; flex-direction: column; gap: 20px;">
+                    <div class="card">
+                        <div class="card-header"><span>Upcoming Studio Schedule</span><span class="tag-live">LIVE</span></div>
+                        <div id="admin-schedule-list"></div>
+                    </div>
+                    <div class="card">
+                        <div class="card-header"><span>Active Workshops & Rosters</span><span class="tag-live">LIVE</span></div>
+                        <div id="admin-active-workshops"></div>
+                    </div>
+                    <div class="card">
+                        <div class="card-header"><span>Faculty Request Inbox</span><span class="tag-pending">PENDING</span></div>
+                        <div id="admin-inbox-list"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div style="margin-top: 40px; text-align: center; padding: 20px; border: 2px solid var(--text-main); border-radius: 8px; background-color: var(--card-bg);">
+            <a href="https://asu.campuslabs.com/engage/organization/generousdevils" target="_blank" style="color: var(--text-main); font-weight: 900; text-decoration: underline; font-size: 15px; text-transform: uppercase;">Claim your free Generous Devils club membership on Sun Devil Central →</a>
+        </div>
+    </div>
+
+    <!-- JAVASCRIPT LOGIC -->
+    <script>
+        document.addEventListener("DOMContentLoaded", () => {
+            const userData = localStorage.getItem('inkwks_user');
+            if (!userData) { window.location.href = "index.html"; return; }
+            
+            const user = JSON.parse(userData);
+            const displayName = user.email.split('@')[0].charAt(0).toUpperCase() + user.email.split('@')[0].slice(1);
+            document.getElementById('display-name').innerText = displayName;
+            document.getElementById('display-email').innerText = user.email;
+
+            if (user.role !== 'admin') document.getElementById('nav-switch-role-btn').style.display = 'none';
+
+            enforceView(user.role);
+            fetchPassStatus(user.id);
+            fetchFacultyRequests(user.id);
+            fetchWorkshopData(user.id);
+
+            if (user.role === 'admin') loadAdminData(user.id);
+        });
+
+        function setActiveNav(clickedEl) {
+            document.querySelectorAll('.nav-btn').forEach(btn => btn.classList.remove('nav-btn-active'));
+            if(clickedEl) clickedEl.classList.add('nav-btn-active');
+        }
+
+        function enforceView(targetRole) {
+            const user = JSON.parse(localStorage.getItem('inkwks_user'));
+            if (user.role !== 'admin' && targetRole !== user.role && !(user.role === 'student' && targetRole === 'workshop')) return;
+
+            document.getElementById('student-subnav').style.display = (targetRole === 'student' || targetRole === 'workshop') ? 'flex' : 'none';
+            document.querySelectorAll('.view-section').forEach(el => el.classList.remove('active-view'));
+
+            const badge = document.getElementById('current-view-badge');
+
+            if (targetRole === 'student') {
+                document.getElementById('student-view').classList.add('active-view');
+                badge.innerText = 'STUDENT PASS';
+            } else if (targetRole === 'faculty') {
+                document.getElementById('faculty-view').classList.add('active-view');
+                badge.innerText = 'FACULTY / STAFF';
+            } else if (targetRole === 'workshop') {
+                document.getElementById('workshop-view').classList.add('active-view');
+                badge.innerText = 'WORKSHOP PARTICIPANT';
+            } else if (targetRole === 'admin') {
+                document.getElementById('admin-view').classList.add('active-view');
+                badge.innerText = 'ADMIN PORTAL';
+            }
+            closeRoleModal();
+        }
+
+        function openRoleModal() { document.getElementById('roleGatewayModal').style.display = 'flex'; }
+        function closeRoleModal() { document.getElementById('roleGatewayModal').style.display = 'none'; }
+
+        async function fetchPassStatus(userId) {
+            const user = JSON.parse(localStorage.getItem('inkwks_user'));
+            const orientationBadge = document.getElementById('orientation-status-badge');
+            if (user.orientation_completed) {
+                orientationBadge.innerText = "COMPLETED";
+                orientationBadge.style.backgroundColor = "var(--text-main)";
+                orientationBadge.style.color = "var(--bg-main)";
+            }
+            
+            try {
+                const response = await fetch(`http://127.0.0.1:8000/api/memberships/${userId}`);
+                const data = await response.json();
+                const badgeElement = document.getElementById('pass-status-badge');
+                if (data.has_pass) {
+                    badgeElement.innerText = `ACTIVE (${data.sessions_remaining} LEFT)`;
+                    badgeElement.classList.remove('status-none');
+                    badgeElement.style.backgroundColor = 'var(--asu-gold)';
+                    badgeElement.style.color = 'var(--text-main)';
+                    
+                    if (data.expiration_date) {
+                        const expDate = new Date(data.expiration_date).toLocaleDateString();
+                        const expDiv = document.getElementById('pass-expiration-display');
+                        expDiv.innerText = `Valid through: ${expDate}`;
+                        expDiv.style.display = "inline-block"; 
+                    }
+                }
+                const aptResponse = await fetch(`http://127.0.0.1:8000/api/appointments/${userId}`);
+                if (aptResponse.ok) {
+                    const appointments = await aptResponse.json();
+                    if (appointments.length > 0) {
+                        document.getElementById('appointment-list').innerHTML = appointments.map(apt => `<div style="padding: 12px; background-color: var(--input-bg); border: 2px solid var(--border-color); border-left: 6px solid var(--asu-gold); border-radius: 4px; margin-bottom: 10px; color: var(--text-main); font-weight: bold;">📅 ${new Date(apt.appointment_time).toLocaleString()} <span style="float: right; background-color: var(--text-main); color: var(--bg-main); padding: 2px 8px; border-radius: 12px; font-size: 10px; text-transform: uppercase;">${apt.status}</span></div>`).join('');
+                    }
+                }
+            } catch (e) {}
+        }
+
+        async function submitFacultyRequest() {
+            const user = JSON.parse(localStorage.getItem('inkwks_user'));
+            const payload = { user_id: user.id, department: document.getElementById('fac-dept').value, course_code: document.getElementById('fac-course').value, category: document.getElementById('fac-category').value, requested_date: document.getElementById('fac-date').value, participants: parseInt(document.getElementById('fac-participants').value) || 0, cost_center: document.getElementById('fac-cost').value, specifications: document.getElementById('fac-specs').value };
+            await fetch('http://127.0.0.1:8000/api/faculty/requests', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+            fetchFacultyRequests(user.id);
+        }
+
+        async function fetchFacultyRequests(userId) {
+            const res = await fetch(`http://127.0.0.1:8000/api/faculty/requests/${userId}`);
+            if (res.ok) {
+                const reqs = await res.json();
+                if (reqs.length > 0) document.getElementById('faculty-request-list').innerHTML = reqs.map(r => `<div style="padding: 12px; background-color: var(--input-bg); border: 2px solid var(--border-color); border-radius: 4px; margin-bottom: 10px; border-left: 6px solid #E0E0E0; color: var(--text-main);"><strong>${r.course_code}</strong> <span style="float: right; background-color: var(--text-main); color: var(--bg-main); padding: 2px 8px; border-radius: 12px; font-size: 10px; text-transform: uppercase;">${r.status}</span></div>`).join('');
+            }
+        }
+
+        async function fetchWorkshopData(userId) {
+            const availRes = await fetch('http://127.0.0.1:8000/api/workshops/available');
+            if (availRes.ok) {
+                const available = await availRes.json();
+                if (available.length > 0) document.getElementById('available-workshops-list').innerHTML = available.map(w => `<div style="padding: 15px; background-color: var(--input-bg); border: 2px solid var(--border-color); border-radius: 4px; margin-bottom: 15px; border-left: 8px solid var(--asu-gold); display: flex; justify-content: space-between;"><div><strong style="color: var(--text-main); font-size: 16px; text-transform: uppercase;">${w.title}</strong><div style="color: var(--text-main); font-size: 13px; margin-top: 5px; font-weight: bold;">👨‍🏫 ${w.instructor} | 🪑 ${w.available_seats} Seats Left</div></div><button onclick="registerForWorkshop('${w.id}')" class="switch-role-btn btn-gold" style="font-size: 14px; padding: 10px 20px;">Register ($${w.price})</button></div>`).join('');
+            }
+            const myRes = await fetch(`http://127.0.0.1:8000/api/workshops/my-registrations/${userId}`);
+            if (myRes.ok) {
+                const myWorkshops = await myRes.json();
+                if (myWorkshops.length > 0) {
+                    const htmlList = myWorkshops.map(w => `<div style="padding: 12px; background-color: var(--input-bg); border: 2px solid var(--border-color); border-left: 6px solid var(--text-main); border-radius: 4px; margin-bottom: 10px; color: var(--text-main); font-weight: bold;"><strong>${w.title}</strong> <span style="float: right; background-color: var(--asu-gold); color: var(--text-main); padding: 2px 8px; border-radius: 12px; border: 1px solid var(--text-main); font-size: 10px; text-transform: uppercase;">${w.status}</span></div>`).join('');
+                    document.getElementById('my-workshops-list').innerHTML = htmlList;
+                    document.getElementById('dashboard-workshop-list').innerHTML = htmlList;
+                }
+            }
+        }
+
+        async function registerForWorkshop(workshopId) {
+            const user = JSON.parse(localStorage.getItem('inkwks_user'));
+            try {
+                const response = await fetch('http://127.0.0.1:8000/api/workshops/register', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ user_id: user.id, workshop_id: workshopId }) });
+                if (response.ok) { alert("Registration successful!"); fetchWorkshopData(user.id); enforceView('student'); window.scrollTo(0, 0); } 
+                else { alert("Registration failed."); }
+            } catch (error) {}
+        }
+
+        async function manageSession(action) {
+            const email = document.getElementById('session-target-email').value;
+            if (!email) return;
+            const user = JSON.parse(localStorage.getItem('inkwks_user'));
+            try {
+                const response = await fetch('http://127.0.0.1:8000/api/admin/sessions', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ admin_id: user.id, target_email: email, action: action }) });
+                const data = await response.json();
+                if (response.ok) { alert(`Success! Sessions Remaining: ${data.sessions_remaining}`); document.getElementById('session-target-email').value = ''; } 
+                else { alert(`Error: ${data.detail}`); }
+            } catch (error) {}
+        }
+
+        function initiatePurchase() {
+            if (!document.getElementById('purchase-terms').checked) { alert("Please check the box acknowledging the studio rules."); return; }
+            window.open("https://square.link/your-actual-checkout-link", "_blank");
+            const badge = document.getElementById('pass-status-badge');
+            badge.innerText = "AWAITING PAYMENT"; badge.classList.remove('status-none'); badge.style.backgroundColor = 'var(--text-main)'; badge.style.color = 'var(--bg-main)';
+        }
+
+        async function openBookingModal() {
+            document.getElementById('bookingModal').style.display = 'flex';
+            document.getElementById('booking-error').innerText = ''; 
+            const selectEl = document.getElementById('appointment-slot-id');
+    
+            try {
+                const response = await fetch('http://127.0.0.1:8000/api/sessionslots/available');
+                if (response.ok) {
+                    const slots = await response.json();
+                    if (slots.length > 0) {
+                        selectEl.innerHTML = slots.map(s => `<option value="${s.id}">${new Date(s.session_time).toLocaleString()} (${s.available_seats} seats left)</option>`).join('');
+                    } else {
+                        selectEl.innerHTML = `<option value="">No sessions currently available</option>`;
+                    }
+                } else {
+                    const error = await response.json();
+                    selectEl.innerHTML = `<option value="">Backend Error: ${error.detail || "Failed to load"}</option>`;
+                }
+            } catch (e) { 
+                selectEl.innerHTML = `<option value="">Connection Error. Is FastAPI running?</option>`; 
+            }
+        }
+
+        function closeBookingModal() { document.getElementById('bookingModal').style.display = 'none'; }
+
+        async function confirmBooking() {
+            const slotId = document.getElementById('appointment-slot-id').value;
+            if (!slotId) { document.getElementById('booking-error').innerText = "Please select a valid session."; return; }
+            const user = JSON.parse(localStorage.getItem('inkwks_user'));
+            try {
+                const response = await fetch('http://127.0.0.1:8000/api/appointments', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ user_id: user.id, session_slot_id: slotId }) });
+                const data = await response.json();
+                if (response.ok) { alert("Session booked successfully!"); closeBookingModal(); fetchPassStatus(user.id); } 
+                else { document.getElementById('booking-error').innerText = data.detail || "Error booking session."; }
+            } catch (error) { document.getElementById('booking-error').innerText = "Connection error to server."; }
+        }
+
+        async function createSessionSlot() {
+            const date = document.getElementById('new-slot-date').value;
+            const capacity = document.getElementById('new-slot-capacity').value;
+    
+            if (!date || !capacity) { 
+                alert("Missing Information: Please enter a date and capacity."); 
+                return; 
+            }
+    
+            const user = JSON.parse(localStorage.getItem('inkwks_user'));
+            try {
+                const response = await fetch('http://127.0.0.1:8000/api/admin/sessionslots', { 
+                    method: 'POST', 
+                    headers: { 'Content-Type': 'application/json' }, 
+                    body: JSON.stringify({ admin_id: user.id, session_time: date, available_seats: parseInt(capacity) }) 
+                });
+        
+                if (response.ok) { 
+                    alert("Session published successfully!"); 
+                    document.getElementById('new-slot-date').value = ''; 
+                    document.getElementById('new-slot-capacity').value = ''; 
+                } else {
+                    const data = await response.json();
+                    alert(`Database Error: ${data.detail || "Failed to publish."}`);
+                }
+            } catch (error) { 
+                alert("Connection Error: Is your FastAPI server (index.py) currently running in the terminal?"); 
+            }
+        }
+
+        async function createWorkshop() {
+            const title = document.getElementById('new-ws-title').value;
+            const instructor = document.getElementById('new-ws-instructor').value;
+            const price = document.getElementById('new-ws-price').value;
+            const capacity = document.getElementById('new-ws-capacity').value;
+            const date = document.getElementById('new-ws-date').value;
+    
+            if (!title || !price || !capacity || !date) { 
+                alert("Missing Information: Please fill out Title, Price, Seats, and Date."); 
+                return; 
+            }
+    
+            const user = JSON.parse(localStorage.getItem('inkwks_user'));
+            try {
+                const response = await fetch('http://127.0.0.1:8000/api/admin/workshops', { 
+                    method: 'POST', 
+                    headers: { 'Content-Type': 'application/json' }, 
+                    body: JSON.stringify({ admin_id: user.id, title: title, instructor: instructor || "TBA", price: parseFloat(price), available_seats: parseInt(capacity), workshop_date: date }) 
+                });
+        
+                if (response.ok) { 
+                    alert("Workshop published successfully!"); 
+                    loadAdminData(user.id); 
+                    document.getElementById('new-ws-title').value = ''; 
+                    document.getElementById('new-ws-instructor').value = ''; 
+                    document.getElementById('new-ws-price').value = ''; 
+                    document.getElementById('new-ws-capacity').value = ''; 
+                    document.getElementById('new-ws-date').value = ''; 
+                } else { 
+                    const data = await response.json(); 
+                    alert(`Backend Error: ${data.detail || "Failed to publish"}`); 
+                }
+            } catch (error) { 
+                alert("Connection Error: Is your FastAPI server running?"); 
+            }
+        }
+
+        async function deleteWorkshop(workshopId) {
+            if(!confirm("Are you sure?")) return;
+            const user = JSON.parse(localStorage.getItem('inkwks_user'));
+            try {
+                const response = await fetch(`http://127.0.0.1:8000/api/workshops/${workshopId}?admin_id=${user.id}`, { method: 'DELETE' });
+                if (response.ok) { loadAdminData(user.id); fetchWorkshopData(user.id); }
+            } catch (e) {}
+        }
+
+        async function loadAdminData(adminId) {
+            try {
+                const wsRes = await fetch('http://127.0.0.1:8000/api/workshops/available');
+                if (wsRes.ok) {
+                    const workshops = await wsRes.json();
+                    if (workshops.length > 0) {
+                        document.getElementById('admin-active-workshops').innerHTML = workshops.map(w => `<div style="padding: 12px; background-color: var(--input-bg); border: 2px solid var(--border-color); border-radius: 4px; border-left: 6px solid var(--asu-gold); color: var(--text-main); margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center;"><div><strong style="text-transform: uppercase;">${w.title}</strong> <br><span style="font-size: 12px; color: var(--text-muted); font-weight: bold;">${w.available_seats} seats remaining</span></div><div style="display: flex; gap: 8px;"><button onclick="viewRoster('workshop', '${w.id}')" class="switch-role-btn" style="background-color: var(--card-bg); color: var(--text-main);">Roster</button><button onclick="deleteWorkshop('${w.id}')" class="switch-role-btn">Delete</button></div></div>`).join('');
+                    }
+                }
+            } catch (e) {}
+
+            try {
+                const schedRes = await fetch(`http://127.0.0.1:8000/api/admin/schedule?admin_id=${adminId}`);
+                if (schedRes.ok) {
+                    const schedule = await schedRes.json();
+                    if (schedule.length > 0) {
+                        document.getElementById('admin-schedule-list').innerHTML = schedule.map(s => `<div style="padding: 12px; background-color: var(--input-bg); border: 2px solid var(--border-color); border-radius: 4px; border-left: 6px solid var(--text-main); color: var(--text-main); margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center;"><div><strong>Student:</strong> ${s.email} <br><span style="font-size: 12px; color: var(--text-muted); font-weight: bold;">${new Date(s.appointment_time).toLocaleString()}</span></div></div>`).join('');
+                    }
+                }
+            } catch (e) {}
+
+            try {
+                const inboxRes = await fetch(`http://127.0.0.1:8000/api/admin/inbox?admin_id=${adminId}`);
+                if (inboxRes.ok) {
+                    const inbox = await inboxRes.json();
+                    if (inbox.faculty.length > 0) {
+                        document.getElementById('admin-inbox-list').innerHTML = inbox.faculty.map(r => `<div style="padding: 12px; background-color: var(--input-bg); border: 2px solid var(--border-color); border-radius: 4px; border-left: 6px solid #E0E0E0; color: var(--text-main); margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center;"><div><strong style="text-transform: uppercase;">${r.type}:</strong> ${r.title} <br><span style="font-size: 12px; color: var(--text-muted); font-weight: bold;">Requested: ${r.participants} participants</span></div><button onclick="reviewRequest('${r.type}', '${r.id}')" class="switch-role-btn">Approve</button></div>`).join('');
+                    }
+                }
+            } catch (e) {}
+        }
+
+        async function reviewRequest(type, id) {
+            if(!confirm("Approve this request?")) return;
+            const user = JSON.parse(localStorage.getItem('inkwks_user'));
+            try {
+                const response = await fetch('http://127.0.0.1:8000/api/admin/inbox/review', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ admin_id: user.id, request_type: type, request_id: id, new_status: 'approved' }) });
+                if (response.ok) loadAdminData(user.id);
+            } catch (e) {}
+        }
+
+        async function viewRoster(type, id) {
+            const user = JSON.parse(localStorage.getItem('inkwks_user'));
+            try {
+                const response = await fetch(`http://127.0.0.1:8000/api/admin/roster/${type}/${id}?admin_id=${user.id}`);
+                if (response.ok) {
+                    const roster = await response.json();
+                    alert(roster.length > 0 ? `REGISTERED:\n\n${roster.join('\n')}` : "No registrations yet.");
+                }
+            } catch (e) {}
+        }
+    </script>
+</body>
+</html>

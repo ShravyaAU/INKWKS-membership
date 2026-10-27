@@ -1,0 +1,554 @@
+from fastapi import FastAPI, HTTPException, Depends
+from fastapi.middleware.cors import CORSMiddleware
+from pydantic import BaseModel
+import psycopg2
+from psycopg2.extras import RealDictCursor
+import os
+from dotenv import load_dotenv
+import httpx
+
+load_dotenv()
+
+app = FastAPI(title="INK|WKS Portal API")
+
+# Add this CORS block to allow your local frontend to talk to the backend
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # Allows all origins for local testing
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+# Database connection generator using your Neon URL
+def get_db():
+    conn = psycopg2.connect(
+        os.getenv("NEON_DATABASE_URL"),
+        cursor_factory=RealDictCursor
+    )
+    try:
+        yield conn
+    finally:
+        conn.close()
+
+# --- Pydantic Models ---
+
+# Pydantic model for incoming Google OAuth token
+class GoogleToken(BaseModel):
+    token: str
+
+# Pydantic model for Admin Session Check-In
+class SessionUpdate(BaseModel):
+    admin_id: str
+    target_email: str
+    action: str
+
+class WorkshopCreate(BaseModel):
+    admin_id: str
+    title: str
+    instructor: str
+    price: float
+    available_seats: int
+    workshop_date: str
+
+@app.get("/api/health")
+def health_check():
+    return {"status": "ok", "message": "INK|WKS API is connected and running."}
+
+@app.post("/api/auth/google")
+async def verify_google_sso(token_data: GoogleToken, db=Depends(get_db)):
+    # 1. Verify the token with Google's public endpoint
+    async with httpx.AsyncClient() as client:
+        response = await client.get(
+            f"https://oauth2.googleapis.com/tokeninfo?id_token={token_data.token}"
+        )
+    
+    if response.status_code != 200:
+        raise HTTPException(status_code=401, detail="Invalid Google token")
+        
+    user_info = response.json()
+    email = user_info.get("email", "")
+    
+    # 2. Enforce strict university access
+    if not email.endswith("@asu.edu"):
+        raise HTTPException(status_code=403, detail="Only @asu.edu emails are permitted.")
+        
+    cursor = db.cursor()
+    
+    # 3. Check if user exists, or create a new profile automatically
+    cursor.execute("SELECT id, role, orientation_completed FROM users WHERE email = %s", (email,))
+    user = cursor.fetchone()
+    
+    if not user:
+        cursor.execute(
+            "INSERT INTO users (email, role) VALUES (%s, 'student') RETURNING id, role, orientation_completed", 
+            (email,)
+        )
+        user = cursor.fetchone()
+        db.commit()
+     
+    # the frontend receives the email   
+    user["email"] = email
+        
+    return {
+        "message": "Authentication successful",
+        "user": user
+    }
+
+@app.get("/api/memberships/{user_id}")
+def get_membership_status(user_id: str, db=Depends(get_db)):
+    cursor = db.cursor()
+    # Find the most recent active pass that hasn't expired
+    cursor.execute("""
+        SELECT sessions_remaining, expiration_date 
+        FROM memberships 
+        WHERE user_id = %s AND status = 'active' AND expiration_date > CURRENT_TIMESTAMP
+        ORDER BY expiration_date DESC LIMIT 1
+    """, (user_id,))
+    
+    membership = cursor.fetchone()
+    
+    if membership:
+        return {"has_pass": True, "sessions_remaining": membership["sessions_remaining"]}
+    
+    return {"has_pass": False, "sessions_remaining": 0}
+
+class AppointmentRequest(BaseModel):
+    user_id: str
+    appointment_time: str
+
+@app.post("/api/appointments")
+def book_appointment(req: AppointmentRequest, db=Depends(get_db)):
+    cursor = db.cursor()
+    
+    # 1. Verify the user has a valid pass with remaining sessions
+    cursor.execute("""
+        SELECT id, sessions_remaining 
+        FROM memberships 
+        WHERE user_id = %s AND status = 'active' AND expiration_date > CURRENT_TIMESTAMP
+        ORDER BY expiration_date DESC LIMIT 1
+    """, (req.user_id,))
+    membership = cursor.fetchone()
+    
+    if not membership or membership['sessions_remaining'] <= 0:
+        raise HTTPException(status_code=400, detail="No active sessions remaining on your pass.")
+        
+    # 2. Book the appointment
+    cursor.execute("""
+        INSERT INTO appointments (user_id, appointment_time, status)
+        VALUES (%s, %s, 'booked')
+    """, (req.user_id, req.appointment_time))
+    
+    # 3. Deduct one session from the active membership
+    cursor.execute("""
+        UPDATE memberships 
+        SET sessions_remaining = sessions_remaining - 1 
+        WHERE id = %s
+        RETURNING sessions_remaining
+    """, (membership['id'],))
+    
+    updated_sessions = cursor.fetchone()['sessions_remaining']
+    db.commit()
+    
+    return {
+        "message": "Appointment booked successfully!", 
+        "sessions_remaining": updated_sessions
+    }
+    
+class RoleUpdateRequest(BaseModel):
+    admin_id: str
+    target_email: str
+    new_role: str
+
+@app.put("/api/admin/roles")
+def update_user_role(req: RoleUpdateRequest, db=Depends(get_db)):
+    cursor = db.cursor()
+    
+    # 1. Verify the requester is actually an Admin
+    cursor.execute("SELECT role FROM users WHERE id = %s", (req.admin_id,))
+    requester = cursor.fetchone()
+    if not requester or requester['role'] != 'admin':
+        raise HTTPException(status_code=403, detail="Unauthorized: Admin access required.")
+        
+    # 2. Verify the target role is valid based on your Enums
+    valid_roles = ['student', 'faculty', 'club', 'workshop', 'admin']
+    if req.new_role not in valid_roles:
+        raise HTTPException(status_code=400, detail="Invalid role specified.")
+        
+    # 3. Update the target user
+    cursor.execute("UPDATE users SET role = %s WHERE email = %s RETURNING id", (req.new_role, req.target_email))
+    updated_user = cursor.fetchone()
+    
+    if not updated_user:
+        raise HTTPException(status_code=404, detail="User not found.")
+        
+    db.commit()
+    return {"message": f"Successfully updated {req.target_email} to {req.new_role}."}
+
+# --- Appointments & Screens Endpoints ---
+
+@app.get("/api/appointments/{user_id}")
+def get_appointments(user_id: str, db=Depends(get_db)):
+    cursor = db.cursor()
+    cursor.execute("SELECT appointment_time, status FROM appointments WHERE user_id = %s ORDER BY appointment_time ASC", (user_id,))
+    return cursor.fetchall()
+
+class ScreenRequest(BaseModel):
+    user_id: str
+    title: str
+    mesh: str
+
+@app.post("/api/screens")
+def submit_screen(req: ScreenRequest, db=Depends(get_db)):
+    cursor = db.cursor()
+    cursor.execute(
+        "INSERT INTO screens (user_id, title, mesh, status) VALUES (%s, %s, %s, 'submitted')",
+        (req.user_id, req.title, req.mesh)
+    )
+    db.commit()
+    return {"message": "Screen submitted successfully!"}
+
+@app.get("/api/screens/{user_id}")
+def get_screens(user_id: str, db=Depends(get_db)):
+    cursor = db.cursor()
+    cursor.execute("SELECT title, mesh, status, updated_at FROM screens WHERE user_id = %s ORDER BY updated_at DESC", (user_id,))
+    return cursor.fetchall()
+
+# --- Faculty Endpoints ---
+class FacultyRequestModel(BaseModel):
+    user_id: str
+    department: str
+    course_code: str
+    category: str
+    requested_date: str
+    participants: int
+    cost_center: str
+    specifications: str
+
+@app.post("/api/faculty/requests")
+def submit_faculty_request(req: FacultyRequestModel, db=Depends(get_db)):
+    cursor = db.cursor()
+    cursor.execute("""
+        INSERT INTO faculty_requests 
+        (user_id, department, course_code, category, requested_date, participants, cost_center, specifications) 
+        VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
+    """, (req.user_id, req.department, req.course_code, req.category, req.requested_date, req.participants, req.cost_center, req.specifications))
+    db.commit()
+    return {"message": "Faculty request submitted successfully!"}
+
+@app.get("/api/faculty/requests/{user_id}")
+def get_faculty_requests(user_id: str, db=Depends(get_db)):
+    cursor = db.cursor()
+    cursor.execute("SELECT course_code, category, requested_date, status FROM faculty_requests WHERE user_id = %s ORDER BY created_at DESC", (user_id,))
+    return cursor.fetchall()
+
+# --- Student Club Endpoints ---
+class ClubRequestModel(BaseModel):
+    user_id: str
+    club_name: str
+    event_deadline: str
+    participants: int
+    item_quantities: str
+    artwork_link: str
+    agreed_to_terms: bool
+
+@app.post("/api/clubs/requests")
+def submit_club_request(req: ClubRequestModel, db=Depends(get_db)):
+    if not req.agreed_to_terms:
+        raise HTTPException(status_code=400, detail="You must agree to the ASU Trademark and Volunteer terms.")
+        
+    cursor = db.cursor()
+    cursor.execute("""
+        INSERT INTO club_requests 
+        (user_id, club_name, event_deadline, participants, item_quantities, artwork_link, agreed_to_terms) 
+        VALUES (%s, %s, %s, %s, %s, %s, %s)
+    """, (req.user_id, req.club_name, req.event_deadline, req.participants, req.item_quantities, req.artwork_link, req.agreed_to_terms))
+    db.commit()
+    return {"message": "Club request submitted successfully!"}
+
+@app.get("/api/clubs/requests/{user_id}")
+def get_club_requests(user_id: str, db=Depends(get_db)):
+    cursor = db.cursor()
+    cursor.execute("SELECT club_name, event_deadline, status FROM club_requests WHERE user_id = %s ORDER BY created_at DESC", (user_id,))
+    return cursor.fetchall()
+
+# --- Workshop Endpoints ---
+@app.get("/api/workshops/available")
+def get_available_workshops(db=Depends(get_db)):
+    cursor = db.cursor()
+    cursor.execute("""
+        SELECT id, title, instructor, skill_level, workshop_date, available_seats, price, what_to_bring 
+        FROM workshops 
+        WHERE workshop_date > CURRENT_TIMESTAMP AND available_seats > 0
+        ORDER BY workshop_date ASC
+    """)
+    return cursor.fetchall()
+
+class WorkshopRegistration(BaseModel):
+    user_id: str
+    workshop_id: str
+
+@app.post("/api/workshops/register")
+def register_workshop(req: WorkshopRegistration, db=Depends(get_db)):
+    cursor = db.cursor()
+    
+    # 1. Check if seats are still available
+    cursor.execute("SELECT available_seats FROM workshops WHERE id = %s", (req.workshop_id,))
+    workshop = cursor.fetchone()
+    
+    if not workshop or workshop['available_seats'] <= 0:
+        raise HTTPException(status_code=400, detail="Sorry, this workshop is full.")
+        
+    # 2. Register the user
+    cursor.execute("INSERT INTO workshop_registrations (workshop_id, user_id) VALUES (%s, %s)", (req.workshop_id, req.user_id))
+    
+    # 3. Deduct one available seat
+    cursor.execute("UPDATE workshops SET available_seats = available_seats - 1 WHERE id = %s", (req.workshop_id,))
+    
+    db.commit()
+    return {"message": "Successfully registered for the workshop!"}
+
+@app.get("/api/workshops/my-registrations/{user_id}")
+def get_my_workshops(user_id: str, db=Depends(get_db)):
+    cursor = db.cursor()
+    cursor.execute("""
+        SELECT w.title, w.workshop_date, r.status 
+        FROM workshop_registrations r
+        JOIN workshops w ON r.workshop_id = w.id
+        WHERE r.user_id = %s
+        ORDER BY w.workshop_date ASC
+    """, (user_id,))
+    return cursor.fetchall()
+
+# --- Admin Portal Endpoints ---
+@app.get("/api/admin/screens")
+def get_all_screens(admin_id: str, db=Depends(get_db)):
+    cursor = db.cursor()
+    # 1. Verify admin
+    cursor.execute("SELECT role FROM users WHERE id = %s", (admin_id,))
+    admin_user = cursor.fetchone()
+    if not admin_user or admin_user.get('role') != 'admin':
+        raise HTTPException(status_code=403, detail="Unauthorized")
+        
+    # 2. Fetch all screens with user emails
+    cursor.execute("""
+        SELECT s.id, s.title, s.mesh, s.status, u.email 
+        FROM screens s 
+        JOIN users u ON s.user_id = u.id 
+        ORDER BY s.updated_at DESC
+    """)
+    return cursor.fetchall()
+
+class ScreenStatusUpdate(BaseModel):
+    admin_id: str
+    status: str
+
+@app.put("/api/admin/screens/{screen_id}")
+def update_screen_status(screen_id: str, req: ScreenStatusUpdate, db=Depends(get_db)):
+    cursor = db.cursor()
+    cursor.execute("SELECT role FROM users WHERE id = %s", (req.admin_id,))
+    admin_user = cursor.fetchone()
+    if not admin_user or admin_user.get('role') != 'admin':
+        raise HTTPException(status_code=403, detail="Unauthorized")
+        
+    cursor.execute("UPDATE screens SET status = %s WHERE id = %s", (req.status, screen_id))
+    db.commit()
+    return {"message": "Screen status updated"}
+
+
+# --- NEW: Admin Session Manager Endpoint ---
+@app.put("/api/admin/sessions")
+def update_session_count(req: SessionUpdate, db=Depends(get_db)):
+    cursor = db.cursor()
+    
+    try:
+        # 1. Verify the requester is an Admin
+        cursor.execute("SELECT role FROM users WHERE id = %s", (req.admin_id,))
+        requester = cursor.fetchone()
+        if not requester or requester['role'] != 'admin':
+            raise HTTPException(status_code=403, detail="Unauthorized: Admin access required.")
+
+        # 2. Find the target user by email
+        cursor.execute("SELECT id FROM users WHERE email = %s", (req.target_email,))
+        target_user = cursor.fetchone()
+        
+        if not target_user:
+            raise HTTPException(status_code=404, detail="Student email not found.")
+            
+        # 3. Find their active membership
+        cursor.execute("""
+            SELECT id, sessions_remaining 
+            FROM memberships 
+            WHERE user_id = %s AND status = 'active'
+        """, (target_user['id'],))
+        membership = cursor.fetchone()
+        
+        if not membership:
+            raise HTTPException(status_code=400, detail="Student does not have an active print pass.")
+            
+        current_sessions = membership['sessions_remaining']
+        
+        # 4. Apply the logic (Deduct or Restore)
+        if req.action == "deduct":
+            if current_sessions <= 0:
+                raise HTTPException(status_code=400, detail="Student has 0 sessions left.")
+            new_sessions = current_sessions - 1
+        elif req.action == "restore":
+            new_sessions = current_sessions + 1
+        else:
+            raise HTTPException(status_code=400, detail="Invalid action. Use 'deduct' or 'restore'.")
+            
+        # 5. Update the database
+        cursor.execute("""
+            UPDATE memberships 
+            SET sessions_remaining = %s 
+            WHERE id = %s
+        """, (new_sessions, membership['id']))
+        
+        db.commit()
+        
+        return {
+            "message": f"Successfully {req.action}ed session for {req.target_email}.",
+            "sessions_remaining": new_sessions
+        }
+        
+    except HTTPException:
+        # Re-raise standard HTTP exceptions
+        raise
+    except Exception as e:
+        db.rollback()
+        raise HTTPException(status_code=500, detail=str(e))
+    
+# --- NEW: Admin Workshop Manager Endpoints ---
+
+@app.post("/api/admin/workshops")
+def create_admin_workshop(req: WorkshopCreate, db=Depends(get_db)):
+    cursor = db.cursor()
+    
+    # 1. Verify the requester is an Admin
+    cursor.execute("SELECT role FROM users WHERE id = %s", (req.admin_id,))
+    admin = cursor.fetchone()
+    if not admin or admin['role'] != 'admin':
+        raise HTTPException(status_code=403, detail="Unauthorized: Admin access required.")
+
+    # 2. Insert the new workshop into the database
+    try:
+        cursor.execute("""
+            INSERT INTO workshops (title, instructor, price, available_seats, workshop_date)
+            VALUES (%s, %s, %s, %s, %s)
+        """, (req.title, req.instructor, req.price, req.available_seats, req.workshop_date))
+        db.commit()
+        return {"message": "Workshop created successfully."}
+    except Exception as e:
+        db.rollback()
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.delete("/api/workshops/{workshop_id}")
+def delete_admin_workshop(workshop_id: str, admin_id: str, db=Depends(get_db)):
+    cursor = db.cursor()
+    
+    # 1. Verify the requester is an Admin
+    cursor.execute("SELECT role FROM users WHERE id = %s", (admin_id,))
+    admin = cursor.fetchone()
+    if not admin or admin['role'] != 'admin':
+        raise HTTPException(status_code=403, detail="Unauthorized: Admin access required.")
+
+    try:
+        # 2. Delete any student registrations tied to this workshop first (to prevent foreign key constraint errors)
+        cursor.execute("DELETE FROM workshop_registrations WHERE workshop_id = %s", (workshop_id,))
+        
+        # 3. Delete the workshop itself
+        cursor.execute("DELETE FROM workshops WHERE id = %s", (workshop_id,))
+        db.commit()
+        return {"message": "Workshop deleted successfully."}
+    except Exception as e:
+        db.rollback()
+        raise HTTPException(status_code=500, detail=str(e))
+    
+# --- Production Admin Dashboard Endpoints ---
+
+@app.get("/api/admin/schedule")
+def get_admin_schedule(admin_id: str, db=Depends(get_db)):
+    cursor = db.cursor()
+    # Verify Admin
+    cursor.execute("SELECT role FROM users WHERE id = %s", (admin_id,))
+    if cursor.fetchone().get('role') != 'admin':
+        raise HTTPException(status_code=403, detail="Unauthorized")
+        
+    # Fetch live appointments joined with user emails
+    cursor.execute("""
+        SELECT a.id, a.appointment_time, a.status, u.email 
+        FROM appointments a
+        JOIN users u ON a.user_id = u.id
+        WHERE a.appointment_time > CURRENT_TIMESTAMP
+        ORDER BY a.appointment_time ASC
+    """)
+    return cursor.fetchall()
+
+@app.get("/api/admin/inbox")
+def get_admin_inbox(admin_id: str, db=Depends(get_db)):
+    cursor = db.cursor()
+    cursor.execute("SELECT role FROM users WHERE id = %s", (admin_id,))
+    if cursor.fetchone().get('role') != 'admin':
+        raise HTTPException(status_code=403, detail="Unauthorized")
+        
+    # Fetch Pending Faculty Requests
+    cursor.execute("""
+        SELECT id, course_code as title, requested_date as date, participants, 'faculty' as type 
+        FROM faculty_requests WHERE status = 'pending'
+    """)
+    faculty = cursor.fetchall()
+    
+    # Fetch Pending Club Requests
+    cursor.execute("""
+        SELECT id, club_name as title, event_deadline as date, participants, 'club' as type 
+        FROM club_requests WHERE status = 'pending'
+    """)
+    clubs = cursor.fetchall()
+    
+    return {"faculty": faculty, "clubs": clubs}
+
+class RequestReview(BaseModel):
+    admin_id: str
+    request_type: str
+    request_id: str
+    new_status: str
+
+@app.put("/api/admin/inbox/review")
+def review_inbox_request(req: RequestReview, db=Depends(get_db)):
+    cursor = db.cursor()
+    cursor.execute("SELECT role FROM users WHERE id = %s", (req.admin_id,))
+    if cursor.fetchone().get('role') != 'admin':
+        raise HTTPException(status_code=403, detail="Unauthorized")
+        
+    if req.request_type == 'faculty':
+        cursor.execute("UPDATE faculty_requests SET status = %s WHERE id = %s", (req.new_status, req.request_id))
+    elif req.request_type == 'club':
+        cursor.execute("UPDATE club_requests SET status = %s WHERE id = %s", (req.new_status, req.request_id))
+        
+    db.commit()
+    return {"message": f"{req.request_type.capitalize()} request marked as {req.new_status}."}
+
+@app.get("/api/admin/roster/{item_type}/{item_id}")
+def get_roster(item_type: str, item_id: str, admin_id: str, db=Depends(get_db)):
+    cursor = db.cursor()
+    cursor.execute("SELECT role FROM users WHERE id = %s", (admin_id,))
+    if cursor.fetchone().get('role') != 'admin':
+        raise HTTPException(status_code=403, detail="Unauthorized")
+        
+    if item_type == "workshop":
+        cursor.execute("""
+            SELECT u.email FROM workshop_registrations r
+            JOIN users u ON r.user_id = u.id
+            WHERE r.workshop_id = %s
+        """, (item_id,))
+    else:
+        # For sessions, just return the specific user who booked it
+        cursor.execute("""
+            SELECT u.email FROM appointments a
+            JOIN users u ON a.user_id = u.id
+            WHERE a.id = %s
+        """, (item_id,))
+        
+    roster = cursor.fetchall()
+    return [r['email'] for r in roster]

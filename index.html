@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>INK|WKS - Basement Press Co.</title>
+    <script src="https://accounts.google.com/gsi/client" async defer></script>
+    <style>
+        :root {
+            --asu-gold: #FFC627;
+            --black: #111111;
+            --cream: #F9F8F6;
+        }
+        body {
+            background-color: var(--black);
+            color: var(--cream);
+            font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            margin: 0;
+        }
+        .login-container {
+            background-color: #222;
+            padding: 40px;
+            border-radius: 8px;
+            text-align: center;
+            border-top: 5px solid var(--asu-gold);
+            max-width: 400px;
+        }
+        h1 { margin-top: 0; font-size: 24px; letter-spacing: 1px; }
+        p { color: #ccc; font-size: 14px; margin-bottom: 30px; line-height: 1.5; }
+        .error-message { color: #ff6b6b; font-size: 13px; margin-top: 15px; }
+    </style>
+</head>
+<body>
+
+    <div class="login-container">
+        <h1>INKWRKS PORTAL</h1>
+        <p>Generous Devils Student Print Pass.<br>Sign in with your university credentials to access the studio.</p>
+        
+        <!-- Google Sign-In Button Container -->
+        <div id="g_id_onload"
+             data-client_id="211794381525-m5lkagfqmqqdse82k0gds260lhpt9kbf.apps.googleusercontent.com"
+             data-context="signin"
+             data-ux_mode="popup"
+             data-callback="handleCredentialResponse"
+             data-auto_prompt="false">
+        </div>
+        <div class="g_id_signin"
+             data-type="standard"
+             data-shape="rectangular"
+             data-theme="outline"
+             data-text="signin_with"
+             data-size="large"
+             data-logo_alignment="left">
+        </div>
+        
+        <div id="login-error" class="error-message"></div>
+    </div>
+    
+
+    <script>
+        async function handleCredentialResponse(response) {
+            const errorDiv = document.getElementById('login-error');
+            errorDiv.innerText = ""; // Clear old errors
+
+            try {
+                // Send the Google token to your local FastAPI backend
+                const apiResponse = await fetch('http://127.0.0.1:8000/api/auth/google', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ token: response.credential })
+                });
+
+                const data = await apiResponse.json();
+
+                if (!apiResponse.ok) {
+                    throw new Error(data.detail || "Authentication failed.");
+                }
+
+                // If successful, store user data and redirect to dashboard
+                localStorage.setItem('inkwks_user', JSON.stringify(data.user));
+                alert("Login successful! Role: " + data.user.role);
+                window.location.href = "dashboard.html"; 
+
+            } catch (error) {
+                console.error("Login Error:", error);
+                errorDiv.innerText = error.message;
+            }
+        }
+    </script>
+</body>
+</html>
