@@ -69,7 +69,7 @@
 
             try {
                 // Send the Google token to your local FastAPI backend
-                const apiResponse = await fetch('http://127.0.0.1:8000/api/auth/google', {
+                const apiResponse = await fetch('https://inkwks-api.onrender.com/api/auth/google', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ token: response.credential })
