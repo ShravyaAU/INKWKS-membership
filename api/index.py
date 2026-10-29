@@ -302,10 +302,21 @@ def get_admin_schedule(admin_id: str, db=Depends(get_db)):
 def get_admin_inbox(admin_id: str, db=Depends(get_db)):
     cursor = db.cursor()
     cursor.execute("SELECT role FROM users WHERE id = %s", (admin_id,))
-    if cursor.fetchone().get('role') != 'admin': raise HTTPException(status_code=403, detail="Unauthorized")
-    cursor.execute("SELECT id, course_code as title, requested_date as date, participants, 'faculty' as type FROM faculty_requests WHERE status = 'pending'")
-    faculty = cursor.fetchall()
-    return {"faculty": faculty, "clubs": []} # Clubs hidden
+    user_check = cursor.fetchone()
+    if not user_check or user_check.get('role') != 'admin': raise HTTPException(status_code=403, detail="Unauthorized")
+    
+    try:
+        # ILIKE '%pending%' catches 'pending', 'PENDING', or 'PENDING REVIEW'
+        cursor.execute("""
+            SELECT id, course_code as title, requested_date as date, participants, 'faculty' as type 
+            FROM faculty_requests 
+            WHERE status ILIKE '%pending%' OR status IS NULL
+        """)
+        faculty = cursor.fetchall()
+        return {"faculty": faculty, "clubs": []}
+    except Exception as e:
+        db.rollback()
+        raise HTTPException(status_code=500, detail=f"Database error: {str(e)}")
 
 class RequestReview(BaseModel):
     admin_id: str

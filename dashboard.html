@@ -574,6 +574,8 @@
                     const workshops = await wsRes.json();
                     if (workshops.length > 0) {
                         document.getElementById('admin-active-workshops').innerHTML = workshops.map(w => `<div style="padding: 12px; background-color: var(--input-bg); border: 2px solid var(--border-color); border-radius: 4px; border-left: 6px solid var(--asu-gold); color: var(--text-main); margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center;"><div><strong style="text-transform: uppercase;">${w.title}</strong> <br><span style="font-size: 12px; color: var(--text-muted); font-weight: bold;">${w.available_seats} seats remaining</span></div><div style="display: flex; gap: 8px;"><button onclick="viewRoster('workshop', '${w.id}')" class="switch-role-btn" style="background-color: var(--card-bg); color: var(--text-main);">Roster</button><button onclick="deleteWorkshop('${w.id}')" class="switch-role-btn">Delete</button></div></div>`).join('');
+                    } else {
+                        document.getElementById('admin-active-workshops').innerHTML = "No active workshops.";
                     }
                 }
             } catch (e) {}
@@ -584,19 +586,29 @@
                     const schedule = await schedRes.json();
                     if (schedule.length > 0) {
                         document.getElementById('admin-schedule-list').innerHTML = schedule.map(s => `<div style="padding: 12px; background-color: var(--input-bg); border: 2px solid var(--border-color); border-radius: 4px; border-left: 6px solid var(--text-main); color: var(--text-main); margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center;"><div><strong>Student:</strong> ${s.email} <br><span style="font-size: 12px; color: var(--text-muted); font-weight: bold;">${new Date(s.appointment_time).toLocaleString()}</span></div></div>`).join('');
+                    } else {
+                        document.getElementById('admin-schedule-list').innerHTML = "No upcoming sessions booked.";
                     }
                 }
             } catch (e) {}
 
+            const inboxEl = document.getElementById('admin-inbox-list');
             try {
                 const inboxRes = await fetch(`https://inkwks-api.onrender.com/api/admin/inbox?admin_id=${adminId}`);
                 if (inboxRes.ok) {
                     const inbox = await inboxRes.json();
-                    if (inbox.faculty.length > 0) {
-                        document.getElementById('admin-inbox-list').innerHTML = inbox.faculty.map(r => `<div style="padding: 12px; background-color: var(--input-bg); border: 2px solid var(--border-color); border-radius: 4px; border-left: 6px solid #E0E0E0; color: var(--text-main); margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center;"><div><strong style="text-transform: uppercase;">${r.type}:</strong> ${r.title} <br><span style="font-size: 12px; color: var(--text-muted); font-weight: bold;">Requested: ${r.participants} participants</span></div><button onclick="reviewRequest('${r.type}', '${r.id}')" class="switch-role-btn">Approve</button></div>`).join('');
+                    if (inbox.faculty && inbox.faculty.length > 0) {
+                        inboxEl.innerHTML = inbox.faculty.map(r => `<div style="padding: 12px; background-color: var(--input-bg); border: 2px solid var(--border-color); border-radius: 4px; border-left: 6px solid #E0E0E0; color: var(--text-main); margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center;"><div><strong style="text-transform: uppercase;">${r.type}:</strong> ${r.title} <br><span style="font-size: 12px; color: var(--text-muted); font-weight: bold;">Requested: ${r.participants} participants</span></div><button onclick="reviewRequest('${r.type}', '${r.id}')" class="switch-role-btn">Approve</button></div>`).join('');
+                    } else {
+                        inboxEl.innerHTML = "No pending requests.";
                     }
+                } else {
+                    const err = await inboxRes.json();
+                    inboxEl.innerHTML = `<span style="color:red; font-weight:bold;">Backend Error: ${err.detail}</span>`;
                 }
-            } catch (e) {}
+            } catch (e) {
+                inboxEl.innerHTML = `<span style="color:red; font-weight:bold;">Connection Error. Is Render live?</span>`;
+            }
         }
 
         async function reviewRequest(type, id) {
