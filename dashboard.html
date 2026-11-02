@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>INKWKS Membership | Studio Access Portal</title>
+    <title>INK WKS Membership | Studio Access Portal</title>
     <style>
         :root {
             --asu-gold: #FFC627;
@@ -50,7 +50,7 @@
 
     <!-- NAV BAR -->
     <nav class="navbar">
-        <div class="nav-brand"><span style="border-bottom: 4px solid var(--asu-gold); padding-bottom: 2px;">INKWKS Membership</span><br><span style="font-size: 11px; color: var(--text-muted); font-weight: bold;">Basement Press Co.</span></div>
+        <div class="nav-brand"><span style="border-bottom: 4px solid var(--asu-gold); padding-bottom: 2px;">INK WKS Membership</span><br><span style="font-size: 11px; color: var(--text-muted); font-weight: bold;">Basement Press Co.</span></div>
         <div class="nav-controls">
             <div class="role-badge" id="current-view-badge"></div>
             <button id="nav-switch-role-btn" class="switch-role-btn btn-gold" onclick="openRoleModal()">Switch Role</button>
@@ -99,7 +99,11 @@
         <div style="background-color: var(--card-bg); padding: 40px; border-radius: 8px; width: 100%; max-width: 700px; max-height: 85vh; overflow-y: auto; border: 4px solid var(--text-main); position: relative;">
             <h2 style="color: var(--text-main); font-weight: 900; margin-top: 0; border-bottom: 4px solid var(--asu-gold); padding-bottom: 10px; text-transform: uppercase;">Basement Press Co. Studio Policy</h2>
             <div style="color: var(--text-main); font-size: 13px; line-height: 1.6; margin-top: 20px;">
-                <p>Passes are nonrefundable. Participation is subject to studio capacity, equipment condition, staffing, and safety compliance.</p>
+                <h3 style="color: var(--text-main); font-size: 14px; margin-bottom: 5px; text-transform: uppercase; font-weight: 900;">Screen Reclaiming Policy</h3>
+                <p style="margin-top: 0;">Members may not reclaim screens independently. Reclaiming is limited to authorized staff or students who have completed the required safety workshop, passed the skills check, and received studio approval. Screens remain the property of Generous Devils. Students must provide their own printable items.</p>
+                
+                <h3 style="color: var(--text-main); font-size: 14px; margin-bottom: 5px; margin-top: 20px; text-transform: uppercase; font-weight: 900;">Refunds & Access</h3>
+                <p style="margin-top: 0;">Passes are nonrefundable. Participation is subject to studio capacity, equipment condition, staffing, and safety compliance.</p>
             </div>
             <button onclick="document.getElementById('policyModal').style.display='none'" class="switch-role-btn btn-gold" style="width: 100%; margin-top: 20px; padding: 15px; font-size: 16px;">Close</button>
         </div>
@@ -111,82 +115,86 @@
         <div id="student-subnav" style="display: none; background-color: var(--card-bg); padding: 15px 20px; border-radius: 8px; border: 2px solid var(--text-main); margin-bottom: 25px; gap: 12px; font-size: 13px; font-weight: bold; overflow-x: auto; align-items: center;">
             <a href="#" class="nav-btn nav-btn-active" onclick="setActiveNav(this); enforceView('student')">Dashboard</a>
             <a href="#" class="nav-btn" onclick="setActiveNav(this); openBookingModal()">Book a Session</a>
-            <a href="#pass-status-badge" class="nav-btn" onclick="setActiveNav(this); enforceView('student')">My Pass</a>
+            <a href="#pass-status-badge" class="nav-btn" onclick="setActiveNav(this); enforceView('student')">My Membership</a>
             <a href="#" class="nav-btn" onclick="setActiveNav(this); enforceView('workshop')">Workshops</a>
-            <a href="#materials-store" class="nav-btn" onclick="setActiveNav(this); enforceView('student')">Materials & Add-Ons</a>
+            <a href="#materials-store" class="nav-btn" onclick="setActiveNav(this); enforceView('student')">À La Carte Store</a>
             <a href="#" class="nav-btn" onclick="setActiveNav(this); document.getElementById('policyModal').style.display='flex'">Rules & Safety</a>
         </div>
 
         <!-- 1. STUDENT VIEW -->
         <div id="student-view" class="view-section active-view">
             <div class="page-header" style="max-width: 900px; border-bottom: 2px solid var(--border-color); padding-bottom: 20px;">
-                <h1>Student Print Pass</h1>
-                <p>The Generous Devils Print Pass gives ASU students three supervised visits to the Basement Press Co. screen-printing studio for $25. Learn the process, use professional equipment, and bring a project from screen preparation to final print without buying an entire print shop yourself.</p>
-                <p>Each session is up to three hours. Your pass includes shared screen-printing tools, standard cleanup supplies, black ink, orientation, and one standard screen preparation and exposure. Bring your own shirts, paper, bags, or other approved printable items.<br><br><em>Specialty inks, transparencies, additional screens, artwork corrections, and replacement materials may require an additional fee. Studio access is subject to staffing, capacity, equipment condition, and completion of required safety training.</em></p>
+                <h1>Studio Memberships</h1>
+                <p>Select a monthly membership plan to access the Basement Press Co. screen-printing studio. Students must provide their own printable items, and screens remain the property of Generous Devils.</p>
+                <div style="margin-top: 15px; display: flex; align-items: center; gap: 15px;">
+                    <span style="color: var(--text-main); font-weight: bold; font-size: 12px; text-transform: uppercase;">Equipment Orientation Status:</span>
+                    <span id="orientation-status-badge" style="background-color: var(--bg-main); color: var(--text-main); padding: 4px 10px; border-radius: 4px; font-size: 11px; font-weight: bold; border: 2px solid var(--text-main);">PENDING</span>
+                </div>
             </div>
 
-            <div class="dashboard-grid">
-                <!-- Pass Status -->
-                <div class="card" style="grid-column: span 1;">
-                    <div class="card-header"><span>Active Print Pass</span><span class="status-badge status-none" id="pass-status-badge">NO ACTIVE PASS</span></div>
-                    <div id="pass-expiration-display" style="display: none; font-size: 12px; color: var(--text-main); margin-top: -5px; margin-bottom: 15px; font-weight: bold; padding: 4px 8px; border: 2px solid var(--text-main);"></div>
-                    
-                    <div style="margin-bottom: 15px;">
-                        <strong style="color: var(--text-main); font-size: 14px;">Before you purchase</strong>
-                        <p style="color: var(--text-muted); font-size: 13px; line-height: 1.5; margin-top: 5px;">
-                            Review the full studio-use, cancellation, expiration, cleanup, and safety policies. Passes are assigned to the purchaser and may not be shared. Completing payment does not guarantee a specific appointment time; sessions must be booked based on studio availability.
-                        </p>
-                    </div>
+            <!-- MEMBERSHIP STATUS HEADER -->
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; background-color: #E0E0E0; padding: 15px; border: 2px solid var(--text-main); border-radius: 4px;">
+                <strong style="color: var(--text-main); font-size: 14px; text-transform: uppercase;">Current Active Membership:</strong>
+                <span class="status-badge status-none" id="pass-status-badge">NONE</span>
+            </div>
+            <div id="pass-expiration-display" style="display: none; font-size: 12px; color: var(--text-main); margin-top: -5px; margin-bottom: 20px; font-weight: bold; background-color: var(--asu-gold); padding: 4px 8px; border: 2px solid var(--text-main);"></div>
 
-                    <div style="background-color: var(--input-bg); border: 2px solid var(--text-main); padding: 12px; margin: 15px 0; border-radius: 4px;">
-                        <label style="display: flex; gap: 10px; align-items: flex-start; cursor: pointer; font-size: 12px; line-height: 1.5; color: var(--text-main); font-weight: bold;">
-                            <input type="checkbox" id="purchase-terms" style="margin-top: 2px; width: auto; accent-color: var(--text-main);">
-                            <span>I understand what is included, what I must bring, when my pass expires, and that purchases and reservations are subject to the cancellation, safety, and studio-use policies.</span>
-                        </label>
+            <!-- THE 3 MEMBERSHIP TIERS -->
+            <div class="dashboard-grid" style="margin-bottom: 40px;">
+                <!-- OPEN STUDIO -->
+                <div class="card" style="grid-column: span 1; display: flex; flex-direction: column; justify-content: space-between;">
+                    <div>
+                        <div class="card-header" style="margin-bottom: 10px;"><span>Open Studio</span></div>
+                        <div style="font-size: 24px; font-weight: 900; color: var(--text-main); margin-bottom: 5px;">$15 <span style="font-size: 13px; color: var(--text-muted); font-weight: bold;">/ month</span></div>
+                        <p style="font-size: 12px; color: var(--text-muted); font-weight: bold; margin-top: 0; margin-bottom: 20px; border-bottom: 2px solid #E0E0E0; padding-bottom: 10px;">For occasional printers.</p>
+                        <ul style="list-style: none; padding: 0; margin: 0; color: var(--text-main); font-size: 12px; line-height: 1.6; font-weight: bold; margin-bottom: 20px;">
+                            <li>• One supervised studio session (up to 3 hrs)</li>
+                            <li>• Standard black ink</li>
+                            <li>• Shared tools and equipment</li>
+                            <li>• Basic tape and cleanup supplies</li>
+                            <li style="color: var(--text-muted); margin-top: 10px;"><em>*Screen services purchased separately.</em></li>
+                        </ul>
                     </div>
-                    <button class="switch-role-btn btn-gold" style="width: 100%; padding: 12px; font-size: 14px;" onclick="initiatePurchase()">Buy 3 Sessions for $25</button>
-                    
-                    <div style="background-color: var(--text-main); color: var(--bg-main); padding: 12px; margin-top: 15px; border-radius: 4px;">
-                        <strong style="color: var(--asu-gold); font-size: 12px; text-transform: uppercase; letter-spacing: 1px;">Important Notice</strong>
-                        <p style="color: #E0E0E0; font-size: 12px; margin: 5px 0 0 0; line-height: 1.4;">The pass does not guarantee a perfect final product. Screen printing involves testing, registration, setup, and the possibility of misprints.</p>
-                    </div>
+                    <button class="switch-role-btn" style="width: 100%; padding: 12px; font-size: 14px;" onclick="initiatePurchase('https://square.link/your-open-studio-link')">Select Plan</button>
                 </div>
 
-                <!-- Included Offerings -->
-                <div class="card" style="grid-column: span 1;">
-                    <div class="card-header"><span>Included in Pass</span></div>
-                    <ul style="list-style: none; padding: 0; margin: 0; color: var(--text-main); font-size: 13px; line-height: 1.6; font-weight: bold;">
-                        <li>• Three supervised studio sessions (up to 3 hrs each)</li>
-                        <li>• Shared tools, presses, and washout/drying equipment</li>
-                        <li>• Standard black ink and basic cleanup supplies</li>
-                        <li>• Reclaimed test paper when available</li>
-                        <li>• Guidance from a trained studio monitor</li>
-                        <li style="margin-top: 15px; display: flex; align-items: center; justify-content: space-between; border-top: 2px dashed var(--border-color); padding-top: 15px;">
-                            <span style="color: var(--text-main); text-transform: uppercase;"><strong>Equipment Orientation:</strong></span>
-                            <span id="orientation-status-badge" style="background-color: var(--bg-main); color: var(--text-main); padding: 4px 10px; border-radius: 4px; font-size: 11px; font-weight: bold; border: 2px solid var(--text-main);">PENDING</span>
-                        </li>
-                    </ul>
-                    
-                    <div style="background-color: var(--input-bg); border: 2px solid var(--text-main); border-radius: 4px; padding: 12px; margin-top: 20px;">
-                        <p style="color: var(--text-main); font-size: 12px; margin: 0; line-height: 1.5; font-weight: bold;">One standard screen preparation and exposure is included with each three-session pass. Additional screens, artwork corrections, transparencies, and screen re-exposure may require an additional fee.</p>
+                <!-- INK STARTER -->
+                <div class="card" style="grid-column: span 1; display: flex; flex-direction: column; justify-content: space-between;">
+                    <div>
+                        <div class="card-header" style="margin-bottom: 10px;"><span>Ink Starter</span></div>
+                        <div style="font-size: 24px; font-weight: 900; color: var(--text-main); margin-bottom: 5px;">$25 <span style="font-size: 13px; color: var(--text-muted); font-weight: bold;">/ month</span></div>
+                        <p style="font-size: 12px; color: var(--text-muted); font-weight: bold; margin-top: 0; margin-bottom: 20px; border-bottom: 2px solid #E0E0E0; padding-bottom: 10px;">For regular studio access.</p>
+                        <ul style="list-style: none; padding: 0; margin: 0; color: var(--text-main); font-size: 12px; line-height: 1.6; font-weight: bold; margin-bottom: 20px;">
+                            <li>• Three supervised studio sessions (up to 3 hrs/ea)</li>
+                            <li>• Standard black ink</li>
+                            <li>• Shared tools and equipment</li>
+                            <li>• Basic tape and cleanup supplies</li>
+                            <li style="color: var(--text-muted); margin-top: 10px;"><em>*Screen services purchased separately.</em></li>
+                        </ul>
                     </div>
+                    <button class="switch-role-btn" style="width: 100%; padding: 12px; font-size: 14px;" onclick="initiatePurchase('https://square.link/your-ink-starter-link')">Select Plan</button>
                 </div>
 
-                <!-- What to Bring Checklist -->
-                <div class="card" style="grid-column: span 1;">
-                    <div class="card-header"><span>What to Bring</span></div>
-                    <ul style="list-style: none; padding: 0; margin: 0; color: var(--text-main); font-size: 13px; line-height: 1.8; font-weight: bold;">
-                        <li>• Screen done ahead of time.</li>
-                        <li>• Approved shirts, paper, bags, or other printable items</li>
-                        <li>• Transparency paid at time of booking.</li>
-                        <li>• An apron or clothes that can get dirty. We are not responsible.</li>
-                        <li>• Any specialty ink or project-specific material not included in the pass</li>
-                        <li style="margin-top: 15px; padding: 10px; border: 2px solid var(--text-main); background-color: #E0E0E0;"><strong>[!] Closed-toe shoes are required for studio entry.</strong></li>
-                    </ul>
+                <!-- PRINT MAKER -->
+                <div class="card" style="grid-column: span 1; display: flex; flex-direction: column; justify-content: space-between; border-left: 8px solid var(--asu-gold);">
+                    <div>
+                        <div class="card-header" style="margin-bottom: 10px;"><span>Print Maker</span><span class="tag-live">BEST VALUE</span></div>
+                        <div style="font-size: 24px; font-weight: 900; color: var(--text-main); margin-bottom: 5px;">$35 <span style="font-size: 13px; color: var(--text-muted); font-weight: bold;">/ month</span></div>
+                        <p style="font-size: 12px; color: var(--text-muted); font-weight: bold; margin-top: 0; margin-bottom: 20px; border-bottom: 2px solid var(--asu-gold); padding-bottom: 10px;">For a complete print project.</p>
+                        <ul style="list-style: none; padding: 0; margin: 0; color: var(--text-main); font-size: 12px; line-height: 1.6; font-weight: bold; margin-bottom: 20px;">
+                            <li>• Three supervised studio sessions</li>
+                            <li>• One studio-owned screen assignment</li>
+                            <li>• One coating and exposure</li>
+                            <li>• One staff-completed reclaim</li>
+                            <li>• Standard black ink and shared tools</li>
+                            <li>• Temporary screen storage</li>
+                        </ul>
+                    </div>
+                    <button class="switch-role-btn btn-gold" style="width: 100%; padding: 12px; font-size: 14px;" onclick="initiatePurchase('https://square.link/your-print-maker-link')">Select Plan</button>
                 </div>
             </div>
             
-            <div class="dashboard-grid" style="margin-top: 20px;">
+            <div class="dashboard-grid">
                 <div style="grid-column: span 2; display: flex; flex-direction: column; gap: 20px;">
                     <!-- Unified Schedule -->
                     <div class="card">
@@ -197,16 +205,46 @@
                         <div id="dashboard-workshop-list" style="color: var(--text-muted); font-size: 13px; font-weight: bold;"></div>
                     </div>
                 </div>
-                <!-- Materials Store -->
+
+                <!-- À LA CARTE & MEMBER ADD-ONS -->
                 <div id="materials-store" class="card" style="grid-column: span 1; height: fit-content;">
-                    <div class="card-header"><span>📦 Materials & Add-Ons</span></div>
-                    <div style="display: flex; justify-content: space-between; align-items: center; padding: 12px 0; border-bottom: 1px solid var(--border-color);">
-                        <div><div style="font-weight: 900; font-size: 13px; color: var(--text-main); text-transform: uppercase;">Extra Session</div></div>
-                        <span style="background-color: var(--text-main); color: var(--bg-main); padding: 4px 10px; border-radius: 4px; font-size: 12px; font-weight: bold;">$15</span>
+                    <div class="card-header"><span>📦 À La Carte & Add-Ons</span></div>
+                    
+                    <div style="display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px solid var(--border-color);">
+                        <div style="font-weight: 900; font-size: 11px; color: var(--text-main); text-transform: uppercase;">Additional Studio Session</div>
+                        <span style="background-color: var(--text-main); color: var(--bg-main); padding: 4px 8px; border-radius: 4px; font-size: 11px; font-weight: bold;">$12</span>
                     </div>
-                    <div style="display: flex; justify-content: space-between; align-items: center; padding: 12px 0;">
-                        <div><div style="font-weight: 900; font-size: 13px; color: var(--text-main); text-transform: uppercase;">Transparency Output</div></div>
-                        <span style="background-color: var(--text-main); color: var(--bg-main); padding: 4px 10px; border-radius: 4px; font-size: 12px; font-weight: bold;">$5</span>
+                    <div style="display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px solid var(--border-color);">
+                        <div style="font-weight: 900; font-size: 11px; color: var(--text-main); text-transform: uppercase;">Screen Assign, Coat + Expose</div>
+                        <span style="background-color: var(--text-main); color: var(--bg-main); padding: 4px 8px; border-radius: 4px; font-size: 11px; font-weight: bold;">$15</span>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px solid var(--border-color);">
+                        <div style="font-weight: 900; font-size: 11px; color: var(--text-main); text-transform: uppercase;">Staff-Completed Reclaim</div>
+                        <span style="background-color: var(--text-main); color: var(--bg-main); padding: 4px 8px; border-radius: 4px; font-size: 11px; font-weight: bold;">$12</span>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px solid var(--border-color);">
+                        <div style="font-weight: 900; font-size: 11px; color: var(--text-main); text-transform: uppercase;">Additional Complete Screen Pkg</div>
+                        <span style="background-color: var(--text-main); color: var(--bg-main); padding: 4px 8px; border-radius: 4px; font-size: 11px; font-weight: bold;">$25</span>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px solid var(--border-color);">
+                        <div style="font-weight: 900; font-size: 11px; color: var(--text-main); text-transform: uppercase;">Transparency Output</div>
+                        <span style="background-color: var(--text-main); color: var(--bg-main); padding: 4px 8px; border-radius: 4px; font-size: 11px; font-weight: bold;">$4 - $8</span>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px solid var(--border-color);">
+                        <div style="font-weight: 900; font-size: 11px; color: var(--text-main); text-transform: uppercase;">Additional Standard Ink</div>
+                        <span style="background-color: var(--text-main); color: var(--bg-main); padding: 4px 8px; border-radius: 4px; font-size: 11px; font-weight: bold;">$5 / sess</span>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px solid var(--border-color);">
+                        <div style="font-weight: 900; font-size: 11px; color: var(--text-main); text-transform: uppercase;">Specialty Ink</div>
+                        <span style="background-color: var(--text-main); color: var(--bg-main); padding: 4px 8px; border-radius: 4px; font-size: 11px; font-weight: bold;">Cost+20%</span>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px solid var(--border-color);">
+                        <div style="font-weight: 900; font-size: 11px; color: var(--text-main); text-transform: uppercase;">Screen Storage Extension</div>
+                        <span style="background-color: var(--text-main); color: var(--bg-main); padding: 4px 8px; border-radius: 4px; font-size: 11px; font-weight: bold;">$5 / wk</span>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; align-items: center; padding: 10px 0;">
+                        <div style="font-weight: 900; font-size: 11px; color: var(--text-main); text-transform: uppercase;">Damaged / Unreturned Screen</div>
+                        <span style="background-color: var(--text-main); color: var(--bg-main); padding: 4px 8px; border-radius: 4px; font-size: 11px; font-weight: bold;">Cost+$10</span>
                     </div>
                 </div>
             </div>
@@ -300,7 +338,7 @@
         </div>
 
         <div style="margin-top: 40px; text-align: center; padding: 20px; border: 2px solid var(--text-main); border-radius: 8px; background-color: var(--card-bg);">
-            <a href="https://sundevilcentral.eoss.asu.edu/huemans/home" target="_blank" style="color: var(--text-main); font-weight: 900; text-decoration: underline; font-size: 15px; text-transform: uppercase;">Claim your free Generous Devils club membership on Sun Devil Central →</a>
+            <a href="https://asu.campuslabs.com/engage/organization/generousdevils" target="_blank" style="color: var(--text-main); font-weight: 900; text-decoration: underline; font-size: 15px; text-transform: uppercase;">Claim your free Generous Devils club membership on Sun Devil Central →</a>
         </div>
     </div>
 
@@ -389,6 +427,22 @@
                     const appointments = await aptResponse.json();
                     if (appointments.length > 0) {
                         document.getElementById('appointment-list').innerHTML = appointments.map(apt => `<div style="padding: 12px; background-color: var(--input-bg); border: 2px solid var(--border-color); border-left: 6px solid var(--asu-gold); border-radius: 4px; margin-bottom: 10px; color: var(--text-main); font-weight: bold;">📅 ${new Date(apt.appointment_time).toLocaleString()} <span style="float: right; background-color: var(--text-main); color: var(--bg-main); padding: 2px 8px; border-radius: 12px; font-size: 10px; text-transform: uppercase;">${apt.status}</span></div>`).join('');
+                    } else {
+                        document.getElementById('appointment-list').innerHTML = "No upcoming session appointments.";
+                    }
+                }
+            } catch (e) {}
+        }
+
+        async function fetchFacultyRequests(userId) {
+            try {
+                const res = await fetch(`https://inkwks-api.onrender.com/api/faculty/requests/${userId}`);
+                if (res.ok) {
+                    const reqs = await res.json();
+                    if (reqs.length > 0) {
+                        document.getElementById('faculty-request-list').innerHTML = reqs.map(r => `<div style="padding: 12px; background-color: var(--input-bg); border: 2px solid var(--border-color); border-radius: 4px; margin-bottom: 10px; border-left: 6px solid #E0E0E0; color: var(--text-main);"><strong>${r.course_code}</strong> <span style="float: right; background-color: var(--text-main); color: var(--bg-main); padding: 2px 8px; border-radius: 12px; font-size: 10px; text-transform: uppercase;">${r.status}</span></div>`).join('');
+                    } else {
+                        document.getElementById('faculty-request-list').innerHTML = "No requests submitted.";
                     }
                 }
             } catch (e) {}
@@ -397,42 +451,54 @@
         async function submitFacultyRequest() {
             const user = JSON.parse(localStorage.getItem('inkwks_user'));
             const payload = { user_id: user.id, department: document.getElementById('fac-dept').value, course_code: document.getElementById('fac-course').value, category: document.getElementById('fac-category').value, requested_date: document.getElementById('fac-date').value, participants: parseInt(document.getElementById('fac-participants').value) || 0, cost_center: document.getElementById('fac-cost').value, specifications: document.getElementById('fac-specs').value };
-            await fetch('https://inkwks-api.onrender.com/api/faculty/requests', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
-            fetchFacultyRequests(user.id);
-        }
-
-        async function fetchFacultyRequests(userId) {
-            const res = await fetch(`https://inkwks-api.onrender.com/api/faculty/requests/${userId}`);
-            if (res.ok) {
-                const reqs = await res.json();
-                if (reqs.length > 0) document.getElementById('faculty-request-list').innerHTML = reqs.map(r => `<div style="padding: 12px; background-color: var(--input-bg); border: 2px solid var(--border-color); border-radius: 4px; margin-bottom: 10px; border-left: 6px solid #E0E0E0; color: var(--text-main);"><strong>${r.course_code}</strong> <span style="float: right; background-color: var(--text-main); color: var(--bg-main); padding: 2px 8px; border-radius: 12px; font-size: 10px; text-transform: uppercase;">${r.status}</span></div>`).join('');
-            }
+            try {
+                await fetch('https://inkwks-api.onrender.com/api/faculty/requests', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+                alert("Faculty Request Submitted!");
+                fetchFacultyRequests(user.id);
+            } catch (e) { alert("Connection Error."); }
         }
 
         async function fetchWorkshopData(userId) {
-            const availRes = await fetch('https://inkwks-api.onrender.com/api/workshops/available');
-            if (availRes.ok) {
-                const available = await availRes.json();
-                if (available.length > 0) document.getElementById('available-workshops-list').innerHTML = available.map(w => `<div style="padding: 15px; background-color: var(--input-bg); border: 2px solid var(--border-color); border-radius: 4px; margin-bottom: 15px; border-left: 8px solid var(--asu-gold); display: flex; justify-content: space-between;"><div><strong style="color: var(--text-main); font-size: 16px; text-transform: uppercase;">${w.title}</strong><div style="color: var(--text-main); font-size: 13px; margin-top: 5px; font-weight: bold;">👨‍🏫 ${w.instructor} | 🪑 ${w.available_seats} Seats Left</div></div><button onclick="registerForWorkshop('${w.id}')" class="switch-role-btn btn-gold" style="font-size: 14px; padding: 10px 20px;">Register ($${w.price})</button></div>`).join('');
-            }
-            const myRes = await fetch(`https://inkwks-api.onrender.com/api/workshops/my-registrations/${userId}`);
-            if (myRes.ok) {
-                const myWorkshops = await myRes.json();
-                if (myWorkshops.length > 0) {
-                    const htmlList = myWorkshops.map(w => `<div style="padding: 12px; background-color: var(--input-bg); border: 2px solid var(--border-color); border-left: 6px solid var(--text-main); border-radius: 4px; margin-bottom: 10px; color: var(--text-main); font-weight: bold;"><strong>${w.title}</strong> <span style="float: right; background-color: var(--asu-gold); color: var(--text-main); padding: 2px 8px; border-radius: 12px; border: 1px solid var(--text-main); font-size: 10px; text-transform: uppercase;">${w.status}</span></div>`).join('');
-                    document.getElementById('my-workshops-list').innerHTML = htmlList;
-                    document.getElementById('dashboard-workshop-list').innerHTML = htmlList;
+            try {
+                const availRes = await fetch('https://inkwks-api.onrender.com/api/workshops/available');
+                if (availRes.ok) {
+                    const available = await availRes.json();
+                    if (available.length > 0) {
+                        document.getElementById('available-workshops-list').innerHTML = available.map(w => `<div style="padding: 15px; background-color: var(--input-bg); border: 2px solid var(--border-color); border-radius: 4px; margin-bottom: 15px; border-left: 8px solid var(--asu-gold); display: flex; justify-content: space-between;"><div><strong style="color: var(--text-main); font-size: 16px; text-transform: uppercase;">${w.title}</strong><div style="color: var(--text-main); font-size: 13px; margin-top: 5px; font-weight: bold;">👨‍🏫 ${w.instructor} | 🪑 ${w.available_seats} Seats Left</div></div><button onclick="registerForWorkshop('${w.id}')" class="switch-role-btn btn-gold" style="font-size: 14px; padding: 10px 20px;">Register ($${w.price})</button></div>`).join('');
+                    } else {
+                        document.getElementById('available-workshops-list').innerHTML = "No upcoming workshops scheduled.";
+                    }
                 }
-            }
+                
+                const myRes = await fetch(`https://inkwks-api.onrender.com/api/workshops/my-registrations/${userId}`);
+                if (myRes.ok) {
+                    const myWorkshops = await myRes.json();
+                    if (myWorkshops.length > 0) {
+                        const htmlList = myWorkshops.map(w => `<div style="padding: 12px; background-color: var(--input-bg); border: 2px solid var(--border-color); border-left: 6px solid var(--text-main); border-radius: 4px; margin-bottom: 10px; color: var(--text-main); font-weight: bold;"><strong>${w.title}</strong> <span style="float: right; background-color: var(--asu-gold); color: var(--text-main); padding: 2px 8px; border-radius: 12px; border: 1px solid var(--text-main); font-size: 10px; text-transform: uppercase;">${w.status}</span></div>`).join('');
+                        document.getElementById('my-workshops-list').innerHTML = htmlList;
+                        document.getElementById('dashboard-workshop-list').innerHTML = htmlList;
+                    } else {
+                        document.getElementById('my-workshops-list').innerHTML = "No registered workshops.";
+                        document.getElementById('dashboard-workshop-list').innerHTML = "No registered workshops.";
+                    }
+                }
+            } catch (e) {}
         }
 
         async function registerForWorkshop(workshopId) {
             const user = JSON.parse(localStorage.getItem('inkwks_user'));
             try {
                 const response = await fetch('https://inkwks-api.onrender.com/api/workshops/register', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ user_id: user.id, workshop_id: workshopId }) });
-                if (response.ok) { alert("Registration successful!"); fetchWorkshopData(user.id); enforceView('student'); window.scrollTo(0, 0); } 
-                else { alert("Registration failed."); }
-            } catch (error) {}
+                if (response.ok) { 
+                    alert("Registration successful!"); 
+                    fetchWorkshopData(user.id); 
+                    enforceView('student'); 
+                    window.scrollTo(0, 0); 
+                } else { 
+                    const data = await response.json();
+                    alert(`Registration failed: ${data.detail}`); 
+                }
+            } catch (error) { alert("Connection Error."); }
         }
 
         async function manageSession(action) {
@@ -444,21 +510,24 @@
                 const data = await response.json();
                 if (response.ok) { alert(`Success! Sessions Remaining: ${data.sessions_remaining}`); document.getElementById('session-target-email').value = ''; } 
                 else { alert(`Error: ${data.detail}`); }
-            } catch (error) {}
+            } catch (error) { alert("Connection Error."); }
         }
 
-        function initiatePurchase() {
-            if (!document.getElementById('purchase-terms').checked) { alert("Please check the box acknowledging the studio rules."); return; }
-            window.open("https://square.link/your-actual-checkout-link", "_blank");
+        function initiatePurchase(planUrl) {
+            window.open(planUrl, "_blank");
             const badge = document.getElementById('pass-status-badge');
-            badge.innerText = "AWAITING PAYMENT"; badge.classList.remove('status-none'); badge.style.backgroundColor = 'var(--text-main)'; badge.style.color = 'var(--bg-main)';
+            badge.innerText = "AWAITING PAYMENT"; 
+            badge.classList.remove('status-none'); 
+            badge.style.backgroundColor = 'var(--text-main)'; 
+            badge.style.color = 'var(--bg-main)';
         }
 
         async function openBookingModal() {
             document.getElementById('bookingModal').style.display = 'flex';
             document.getElementById('booking-error').innerText = ''; 
             const selectEl = document.getElementById('appointment-slot-id');
-    
+            selectEl.innerHTML = `<option value="">Loading available sessions...</option>`;
+            
             try {
                 const response = await fetch('https://inkwks-api.onrender.com/api/sessionslots/available');
                 if (response.ok) {
@@ -466,15 +535,12 @@
                     if (slots.length > 0) {
                         selectEl.innerHTML = slots.map(s => `<option value="${s.id}">${new Date(s.session_time).toLocaleString()} (${s.available_seats} seats left)</option>`).join('');
                     } else {
-                        selectEl.innerHTML = `<option value="">No sessions currently available</option>`;
+                        selectEl.innerHTML = `<option value="">No sessions currently available.</option>`;
                     }
                 } else {
-                    const error = await response.json();
-                    selectEl.innerHTML = `<option value="">Backend Error: ${error.detail || "Failed to load"}</option>`;
+                    selectEl.innerHTML = `<option value="">Backend Error. Check terminal.</option>`;
                 }
-            } catch (e) { 
-                selectEl.innerHTML = `<option value="">Connection Error. Is FastAPI running?</option>`; 
-            }
+            } catch (e) { selectEl.innerHTML = `<option value="">Connection Error. Is API live?</option>`; }
         }
 
         function closeBookingModal() { document.getElementById('bookingModal').style.display = 'none'; }
@@ -486,39 +552,32 @@
             try {
                 const response = await fetch('https://inkwks-api.onrender.com/api/appointments', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ user_id: user.id, session_slot_id: slotId }) });
                 const data = await response.json();
-                if (response.ok) { alert("Session booked successfully!"); closeBookingModal(); fetchPassStatus(user.id); } 
-                else { document.getElementById('booking-error').innerText = data.detail || "Error booking session."; }
+                if (response.ok) { 
+                    alert("Session booked successfully!"); 
+                    closeBookingModal(); 
+                    fetchPassStatus(user.id); 
+                } else { 
+                    document.getElementById('booking-error').innerText = data.detail || "Error booking session."; 
+                }
             } catch (error) { document.getElementById('booking-error').innerText = "Connection error to server."; }
         }
 
         async function createSessionSlot() {
             const date = document.getElementById('new-slot-date').value;
             const capacity = document.getElementById('new-slot-capacity').value;
-    
-            if (!date || !capacity) { 
-                alert("Missing Information: Please enter a date and capacity."); 
-                return; 
-            }
-    
+            if (!date || !capacity) { alert("Please fill out both the Date and Capacity."); return; }
             const user = JSON.parse(localStorage.getItem('inkwks_user'));
             try {
-                const response = await fetch('https://inkwks-api.onrender.com/api/admin/sessionslots', { 
-                    method: 'POST', 
-                    headers: { 'Content-Type': 'application/json' }, 
-                    body: JSON.stringify({ admin_id: user.id, session_time: date, available_seats: parseInt(capacity) }) 
-                });
-        
+                const response = await fetch('https://inkwks-api.onrender.com/api/admin/sessionslots', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ admin_id: user.id, session_time: date, available_seats: parseInt(capacity) }) });
                 if (response.ok) { 
-                    alert("Session published successfully!"); 
+                    alert("Session slot published to the booking menu!"); 
                     document.getElementById('new-slot-date').value = ''; 
                     document.getElementById('new-slot-capacity').value = ''; 
                 } else {
                     const data = await response.json();
-                    alert(`Database Error: ${data.detail || "Failed to publish."}`);
+                    alert(`Error: ${data.detail}.`);
                 }
-            } catch (error) { 
-                alert("Connection Error: Is your FastAPI server (index.py) currently running in the terminal?"); 
-            }
+            } catch (error) { alert("Connection Error."); }
         }
 
         async function createWorkshop() {
@@ -527,44 +586,35 @@
             const price = document.getElementById('new-ws-price').value;
             const capacity = document.getElementById('new-ws-capacity').value;
             const date = document.getElementById('new-ws-date').value;
-    
-            if (!title || !price || !capacity || !date) { 
-                alert("Missing Information: Please fill out Title, Price, Seats, and Date."); 
-                return; 
-            }
-    
+            if (!title || !price || !capacity || !date) { alert("Please fill out Title, Price, Seats, and Date."); return; }
+            
             const user = JSON.parse(localStorage.getItem('inkwks_user'));
             try {
-                const response = await fetch('https://inkwks-api.onrender.com/api/admin/workshops', { 
-                    method: 'POST', 
-                    headers: { 'Content-Type': 'application/json' }, 
-                    body: JSON.stringify({ admin_id: user.id, title: title, instructor: instructor || "TBA", price: parseFloat(price), available_seats: parseInt(capacity), workshop_date: date }) 
-                });
-        
+                const response = await fetch('https://inkwks-api.onrender.com/api/admin/workshops', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ admin_id: user.id, title: title, instructor: instructor || "TBA", price: parseFloat(price), available_seats: parseInt(capacity), workshop_date: date }) });
                 if (response.ok) { 
                     alert("Workshop published successfully!"); 
-                    loadAdminData(user.id); 
                     document.getElementById('new-ws-title').value = ''; 
                     document.getElementById('new-ws-instructor').value = ''; 
                     document.getElementById('new-ws-price').value = ''; 
                     document.getElementById('new-ws-capacity').value = ''; 
-                    document.getElementById('new-ws-date').value = ''; 
-                } else { 
-                    const data = await response.json(); 
-                    alert(`Backend Error: ${data.detail || "Failed to publish"}`); 
+                    document.getElementById('new-ws-date').value = '';
+                    
+                    loadAdminData(user.id); 
+                    fetchWorkshopData(user.id);
+                } else {
+                    const data = await response.json();
+                    alert(`Error: ${data.detail}`);
                 }
-            } catch (error) { 
-                alert("Connection Error: Is your FastAPI server running?"); 
-            }
+            } catch (error) { alert("Connection Error."); }
         }
 
         async function deleteWorkshop(workshopId) {
-            if(!confirm("Are you sure?")) return;
+            if(!confirm("Are you sure you want to delete this workshop?")) return;
             const user = JSON.parse(localStorage.getItem('inkwks_user'));
             try {
                 const response = await fetch(`https://inkwks-api.onrender.com/api/workshops/${workshopId}?admin_id=${user.id}`, { method: 'DELETE' });
                 if (response.ok) { loadAdminData(user.id); fetchWorkshopData(user.id); }
-            } catch (e) {}
+            } catch (e) { alert("Connection Error."); }
         }
 
         async function loadAdminData(adminId) {
@@ -607,7 +657,7 @@
                     inboxEl.innerHTML = `<span style="color:red; font-weight:bold;">Backend Error: ${err.detail}</span>`;
                 }
             } catch (e) {
-                inboxEl.innerHTML = `<span style="color:red; font-weight:bold;">Connection Error. Is Render live?</span>`;
+                inboxEl.innerHTML = `<span style="color:red; font-weight:bold;">Connection Error. Is API live?</span>`;
             }
         }
 
